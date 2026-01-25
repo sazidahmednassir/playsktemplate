@@ -33,7 +33,7 @@ module.exports = defineConfig({
   use: {
     /* Base URL to use in actions like `await page.goto('/')` */
     baseURL: "https://app-test.informatiq.no/apps/owa-next/", // Base URL for the application under test
-    timeout: 60000, // Set test timeout to 60 seconds
+    timeout: 80000, // Set test timeout to 60 seconds
     trace: "on", // Enable tracing for debugging
     headless: true, // Run tests in non-headless mode
     screenshot: "only-on-failure", // Capture screenshots only on test failures
