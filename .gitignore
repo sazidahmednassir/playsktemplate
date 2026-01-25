@@ -4,3 +4,7 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /allure-results
+/.github
+/.playwright-mcp
+/.data/.loginData.json
+/data/loginData.json

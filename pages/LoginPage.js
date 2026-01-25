@@ -1,10 +1,9 @@
-
 const LoginPage = {
-  getUsername: (page) => page.getByPlaceholder('email@example.com'),
-  getPassword: (page) => page.getByPlaceholder('enter your passsword'),
-  getLoginBtn: (page) => page.locator('#login'),
-  getHomePageIdentifier: (page) => page.getByRole('button', { name: 'Home' }),
-  getErrorMessage: (page) => page.locator('#toast-container'),
+  getUsername: (page) => page.getByRole("textbox", { name: "Email address" }),
+  getPassword: (page) => page.getByRole("textbox", { name: "Password" }),
+  getContinueBtn: (page) => page.getByRole("button", { name: "Continue" }),
+  getHomePageIdentifier: (page) =>
+    page.getByRole("heading", { name: "(Beta Version)" }),
 };
 
 module.exports = LoginPage;

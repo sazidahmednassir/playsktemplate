@@ -12,19 +12,29 @@ class LoginActions {
   }
 
   async login(username, password) {
+    // Step 1: Enter email and click Continue
     await LoginPage.getUsername(this.page).fill(username);
+    await LoginPage.getContinueBtn(this.page).click();
+
+    // Step 2: Enter password and click Continue
     await LoginPage.getPassword(this.page).fill(password);
-    await LoginPage.getLoginBtn(this.page).click();
+    await LoginPage.getContinueBtn(this.page).click();
   }
 
   async validLogin(username, password) {
     await this.login(username, password);
-    await LoginPage.getHomePageIdentifier(this.page).waitFor();
+    await LoginPage.getHomePageIdentifier(this.page).waitFor({
+      timeout: 10000,
+    });
   }
 
-  async invalidLogin(username, password) {
-    await this.login(username, password);
-    await LoginPage.getErrorMessage(this.page).waitFor();
+  async verifyHomepageVisible() {
+    const homePage = LoginPage.getHomePageIdentifier(this.page);
+    await expect(homePage).toBeVisible({ timeout: 10000 });
+  }
+
+  async verifyNotOnLoginPage() {
+    await expect(this.page).not.toHaveURL(/login/);
   }
 }
 

@@ -1,4 +1,3 @@
-
 // @ts-check
 const { defineConfig, devices } = require("@playwright/test");
 
@@ -33,10 +32,10 @@ module.exports = defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions */
   use: {
     /* Base URL to use in actions like `await page.goto('/')` */
-    baseURL: "https://rahulshettyacademy.com/client", // Base URL for the application under test
+    baseURL: "https://app-test.informatiq.no/apps/owa-next/", // Base URL for the application under test
     timeout: 60000, // Set test timeout to 60 seconds
     trace: "on", // Enable tracing for debugging
-    headless: true, // Run tests in non-headless mode
+    headless: false, // Run tests in non-headless mode
     screenshot: "only-on-failure", // Capture screenshots only on test failures
     video: "retain-on-failure", // Retain video recordings only on test failures
     launchOptions: {
