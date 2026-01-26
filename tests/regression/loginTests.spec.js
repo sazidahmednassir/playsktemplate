@@ -1,19 +1,30 @@
 const { test } = require("../fixture/customfixture");
-const loginData = require("../../data/loginData.json");
+const config = require("../../config/env.config");
 
 test.describe("Login Tests", () => {
-  test.beforeEach(async ({ actions }) => {
-    await actions.login.navigateToLogin(loginData.url);
-  });
-
+  // Test without stored auth to verify fresh login works
   test("User can login with valid credentials and land on homepage - User 2", async ({
+    browser,
     actions,
   }) => {
-    await actions.login.validLogin(
-      loginData.user2.email,
-      loginData.user2.password,
+    await actions.login.loginWithoutStoredState(
+      browser,
+      config.baseURL,
+      config.user2.email,
+      config.user2.password,
     );
-    await actions.login.verifyHomepageVisible();
-    await actions.login.verifyNotOnLoginPage();
+  });
+
+  // Test using stored authentication state
+  test("User can switch tenant from Hailbuton to AkerBP and verify selection", async ({
+    actions,
+  }) => {
+    await actions.login.navigateToLogin(config.baseURL);
+    await actions.login.verifyLoggedIn();
+
+    await actions.tenantSwitch.clickProfileMenu();
+    await actions.tenantSwitch.clickCustomerDropdown("AkerBP");
+    await actions.tenantSwitch.switchToTenant("default");
+    await actions.tenantSwitch.verifyTenantSelected("AkerBP", "default");
   });
 });

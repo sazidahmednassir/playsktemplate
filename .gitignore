@@ -7,3 +7,9 @@ node_modules/
 /.playwright-mcp
 /.data/.loginData.json
 /data/loginData.json
+
+# Environment variables
+.env
+
+# Authentication state
+.auth/
