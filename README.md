@@ -1,81 +1,173 @@
-# AcademyPlay E2E Automation
+# OrangeHRM E2E Automation
 
-This repository contains end-to-end (E2E) automated tests for the AcademyPlay web application using [Playwright](https://playwright.dev/).
+Playwright E2E test automation framework for [OrangeHRM](https://opensource-demo.orangehrmlive.com/web/index.php/auth/login) using the **Page Object Model (POM)** pattern. Managed by **Claude Code skills** for test execution, self-healing locators, and code generation.
 
 ## Project Structure
 
 ```
-academyplay/
-├── actions/                # Action classes for each page and common actions
-│   ├── BaseActions.js      # Common actions (navigation, waits, etc.)
-│   ├── DashboardActions.js
-│   └── LoginActions.js
-├── data/                   # Test data (JSON)
-│   ├── loginData.json
-│   └── testUsers.json
-├── pages/                  # Page objects (locators only)
-│   ├── DashboardPage.js
-│   └── LoginPage.js
-├── tests/
-│   ├── fixture/            # Custom Playwright fixtures
-│   │   └── customfixture.js
-│   ├── regression/                 # test specs
-│   │   ├── dashboardTests.spec.js
-│   │   └── loginTests.spec.js
-├── playwright.config.js    # Playwright configuration
-├── package.json            # Project metadata and scripts
-└── README.md               # Project documentation
+playwrightskill/
+├── .claude/
+│   ├── CLAUDE.md                          # AI identity, style, avoidances
+│   └── skills/                            # Claude Code skills
+│       ├── how-it-works/SKILL.md          # /how-it-works — full project guide
+│       ├── run-tests/SKILL.md             # /run-tests — execute test suite
+│       ├── self-heal/SKILL.md             # /self-heal — auto-fix broken locators
+│       ├── add-test/SKILL.md              # /add-test — create new test spec
+│       ├── add-page/SKILL.md              # /add-page — create/update page object
+│       ├── add-action/SKILL.md            # /add-action — create/update action class
+│       └── project-reference/SKILL.md     # Codebase map (auto-loaded)
+│
+├── pages/                                 # Layer 1: Locators only
+│   ├── LoginPage.js                       # Login form selectors
+│   ├── DashboardPage.js                   # Dashboard widget selectors
+│   ├── ProfilePage.js                     # User dropdown selectors
+│   └── SidebarPage.js                     # Sidebar menu selectors
+│
+├── actions/                               # Layer 2: Business logic
+│   ├── BaseActions.js                     # Static navigation helpers
+│   ├── LoginActions.js                    # Login, verify, ensureLoggedIn
+│   ├── DashboardActions.js                # Dashboard widgets, Quick Launch
+│   ├── ProfileActions.js                  # User dropdown, logout
+│   └── NavigationActions.js               # Sidebar module navigation
+│
+├── tests/                                 # Layer 3: Test specs
+│   ├── fixture/
+│   │   └── customfixture.js               # Injects actions into all tests
+│   └── regression/
+│       ├── loginTests.spec.js             # Fresh login, stored auth (2 tests)
+│       ├── negativeLoginTests.spec.js     # Wrong password/user, empty fields (3 tests)
+│       ├── dashboardTests.spec.js         # Heading, cards, widgets (4 tests)
+│       ├── signOutTests.spec.js           # Logout, session invalidation (2 tests)
+│       └── navigationTests.spec.js        # Sidebar, Admin/PIM/Leave/Dir (5 tests)
+│
+├── config/
+│   └── env.config.js                      # Loads .env into config object
+│
+├── .env                                   # BASE_URL, credentials, auth path
+├── .env.example                           # Template for .env
+├── auth.setup.js                          # Global setup: one-time login, save session
+├── playwright.config.js                   # Runner config: Chrome, Allure, timeouts
+├── package.json                           # Dependencies and npm scripts
+└── .github/workflows/playwright.yml       # CI/CD: run tests, Allure report, email
 ```
 
-## Key Concepts
+## Architecture
 
-**Page Object Model (POM):**
-  - All locators for a page are defined in `/pages/PageName.js` as functions.
-  - All actions (navigation, form filling, etc.) are defined in `/actions/PageNameActions.js`.
-  - Common actions (navigation, waits, etc.) are in `/actions/BaseActions.js`.
+3-layer Page Object Model:
 
-**Custom Fixtures:**
-  - The `/tests/fixture/customfixture.js` file injects an `actions` object into each test, providing access to all page actions in a unified way.
+```
+TEST SPEC  →  calls  →  ACTION CLASS  →  uses  →  PAGE OBJECT
+(what to test)          (how to do it)            (where to find it)
+```
 
-## How to Run
+| Layer | Directory | Responsibility |
+|-------|-----------|---------------|
+| Pages | `pages/` | Locators only — no logic, no assertions |
+| Actions | `actions/` | Business logic — clicks, fills, assertions |
+| Tests | `tests/regression/` | Test scenarios — uses custom fixture |
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-2. **Install Playwright browsers:**
-   ```bash
-   npx playwright install
-   ```
-3. **Run all tests:**
-   ```bash
-   npm run fulltest
-   ```
+## Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Install Playwright browsers
+npx playwright install --with-deps
+
+# Create .env from template
+cp .env.example .env
+```
+
+## Running Tests
+
+| Command | Mode | Workers |
+|---------|------|---------|
+| `npm run test` | Serial (default) | 1 |
+| `npm run test:serial` | Serial | 1 |
+| `npm run test:parallel` | Parallel | 4 |
+| `npm run smoke` | Smoke tagged | Configured |
+| `npm run regression` | Regression tagged | Configured |
+
+## Authentication
+
+Authentication runs **once** before all tests via `auth.setup.js` (globalSetup):
+
+1. Launches browser, logs into OrangeHRM
+2. Saves session to `.auth/state.json`
+3. All tests load this session automatically
+4. Each test's `beforeEach` calls `ensureLoggedIn()` — if session expired, re-logs in
+
+## Test Coverage (16 tests)
+
+| Suite | Tests |
+|-------|-------|
+| Login | Fresh login with valid credentials, stored auth verification |
+| Negative Login | Invalid password, invalid username, empty fields |
+| Dashboard | Dashboard heading, Quick Launch cards, widgets, card navigation |
+| Sign Out | Logout redirect, session invalidation after logout |
+| Navigation | Sidebar visibility, Admin, PIM, Leave, Directory modules |
+
+## Claude Code Skills
+
+This project uses Claude Code skills for automation:
+
+| Skill | Command | Description |
+|-------|---------|-------------|
+| How It Works | `/how-it-works` | Full project guide with architecture and references |
+| Run Tests | `/run-tests` | Execute test suite (serial or parallel) |
+| Self-Heal | `/self-heal` | Auto-fix broken locators after test failures |
+| Add Test | `/add-test` | Create new test spec following POM template |
+| Add Page | `/add-page` | Create or update page object with locators |
+| Add Action | `/add-action` | Create or update action class with methods |
+
+**Scheduled**: Tests run daily at 12:00 PM. If any fail, self-heal auto-fixes locators.
+
+## CI/CD
+
+GitHub Actions (`.github/workflows/playwright.yml`):
+- Triggers on push/PR to `main` and daily schedule
+- Installs deps, Playwright browsers, runs tests
+- Generates Allure single-file HTML report
+- Emails report via Gmail SMTP
+
+**Required Secrets**: `EMAIL_USERNAME`, `EMAIL_PASSWORD`
 
 ## Writing Tests
 
-- Use the injected `actions` object in your tests:
-  ```js
-  const { test } = require("../fixture/customfixture");
-  test('Example', async ({ actions }) => {
-    await actions.login.navigateToLogin('https://example.com');
-    await actions.login.validLogin('user', 'pass');
-    await actions.dashboard.searchAndAddToCart('Product Name');
+```javascript
+const { test } = require("../fixture/customfixture");
+const { expect } = require("@playwright/test");
+const config = require("../../config/env.config");
+
+test.describe("Module Tests", () => {
+  test.beforeEach(async ({ actions }) => {
+    await actions.login.ensureLoggedIn(
+      config.baseURL,
+      config.user2.username,
+      config.user2.password,
+    );
   });
-  ```
-- Locators are accessed via the page objects, e.g. `LoginPage.getLoginBtn(page)`.
-- Actions are accessed via the actions classes, e.g. `actions.login.validLogin(...)`.
-- Common actions are available in `actions/BaseActions.js` for reuse.
 
-## Contributing
+  test("Test description", async ({ actions, page }) => {
+    await actions.dashboard.verifyDashboardLoaded();
+    await actions.navigation.navigateToModule("Admin");
+  });
+});
+```
 
-- Follow the POM and action separation pattern for all new pages and features.
-- Add new test data to `/data/` as needed.
-- Keep tests atomic and independent.
+**Available actions in fixture:**
+- `actions.login` — Login, verify, ensureLoggedIn
+- `actions.dashboard` — Dashboard widgets, Quick Launch
+- `actions.profile` — User dropdown, logout
+- `actions.navigation` — Sidebar module navigation
 
-## Troubleshooting
+## Tech Stack
 
-- If you see browser errors, run `npx playwright install`.
-- If you see module errors, check that all files exist and are named correctly.
-
-
+| Package | Purpose |
+|---------|---------|
+| `@playwright/test` | E2E test framework |
+| `allure-playwright` | Test reporting |
+| `dotenv` | Environment variable management |
+| `xlsx` | Excel data support |
+| `@cucumber/cucumber` | BDD support (available) |
