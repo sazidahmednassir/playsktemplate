@@ -1,13 +1,14 @@
 const ProfilePage = {
-  getProfileButton: (page) => page.locator("button:has(img.user-avatar-img)"),
-  getCustomerDropdown: (page, customerName) =>
-    page.locator("div.customer-info", { hasText: customerName }),
-  getTenantItem: (page, tenantName) =>
-    page.locator("div.tenant-info", {
-      has: page.locator(`span.tenant-name`, { hasText: tenantName }),
-    }),
-  getSwitchButton: (page) => page.locator('button:has-text("Switch")'),
-  getSignOutButton: (page) => page.getByRole("menuitem", { name: "Sign out" }),
+  getUserDropdown: (page) => page.locator(".oxd-userdropdown"),
+  getUserDropdownName: (page) => page.locator(".oxd-userdropdown-name"),
+  getLogoutLink: (page) =>
+    page.getByRole("menuitem", { name: "Logout" }),
+  getAboutLink: (page) =>
+    page.getByRole("menuitem", { name: "About" }),
+  getChangePasswordLink: (page) =>
+    page.getByRole("menuitem", { name: "Change Password" }),
+  getSupportLink: (page) =>
+    page.getByRole("menuitem", { name: "Support" }),
 };
 
 module.exports = ProfilePage;

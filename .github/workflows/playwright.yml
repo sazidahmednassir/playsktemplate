@@ -1,69 +1,60 @@
-# name: Playwright Tests with Allure Report as Single HTML
+name: Playwright Tests with Allure Report as Single HTML
 
-# on:
-#   push:
-#     branches:
-#       - main
-#   pull_request:
-#     branches:
-#       - main
-#   schedule:
-#     - cron: "15 18 * * *" # Runs every day at 01:30 a.m. Bangladesh Time (UTC+6)
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: "15 18 * * *"
 
-# jobs:
-#   test:
-#     runs-on: ubuntu-latest
+jobs:
+  test:
+    runs-on: ubuntu-latest
 
-#     steps:
-#       # Step 1: Checkout the repository
-#       - name: Checkout repository
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-#       # Step 2: Setup Node.js
-#       - name: Setup Node.js
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: 18
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-#       # Step 3: Install dependencies
-#       - name: Install Dependencies
-#         run: npm ci
+      - name: Install Dependencies
+        run: npm ci
 
-#       # Step 4: Install Playwright browsers
-#       - name: Install Playwright Browsers
-#         run: npx playwright install --with-deps
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
 
-#       # Step 5: Run Playwright tests
-#       - name: Run Playwright Tests
-#         run: npx playwright test
-#         continue-on-error: true
+      - name: Run Playwright Tests
+        run: npx playwright test
+        continue-on-error: true
 
-#       # Step 6: Install Allure Command Line Tool
-#       - name: Install Allure Command Line Tool
-#         run: npm install -g allure-commandline
+      - name: Install Allure Command Line Tool
+        run: npm install -g allure-commandline
 
-#       # Step 7: Generate Allure Single HTML Report
-#       - name: Generate Allure Single HTML Report
-#         run: |
-#           rm -rf allure-report
-#           allure generate --single-file allure-results --clean -o allure-report || echo "Report generation failed"
-#         continue-on-error: true
+      - name: Generate Allure Single HTML Report
+        run: |
+          rm -rf allure-report
+          allure generate --single-file allure-results --clean -o allure-report || echo "Report generation failed"
+        continue-on-error: true
 
-#       # Step 8: Send Email with Allure Report as Attachment
-#       - name: Send Email with Allure Report
-#         uses: dawidd6/action-send-mail@v3
-#         with:
-#           server_address: smtp.gmail.com
-#           server_port: 465
-#           username: ${{ secrets.EMAIL_USERNAME }}
-#           password: ${{ secrets.EMAIL_PASSWORD }}
-#           subject: "Allure Test Report"
-#           body: "The Allure report is attached as a single HTML file. Open it in your browser to view the test results."
-#           to: "nassirctg1234@gmail.com"
-#           from: ${{ secrets.EMAIL_USERNAME }}
-#           attachments: allure-report/index.html
+      - name: Send Email with Allure Report
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "Allure Test Report"
+          body: "The Allure report is attached as a single HTML file. Open it in your browser to view the test results."
+          to: "nassirctg1234@gmail.com"
+          from: ${{ secrets.EMAIL_USERNAME }}
+          attachments: allure-report/index.html
 
-#       # Step 9: Fail Workflow if Tests Failed
-#       - name: Fail Workflow if Tests Failed
-#         if: failure()
-#         run: exit 1
+      - name: Fail Workflow if Tests Failed
+        if: failure()
+        run: exit 1

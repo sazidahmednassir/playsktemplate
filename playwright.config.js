@@ -2,102 +2,50 @@
 const { defineConfig, devices } = require("@playwright/test");
 const path = require("path");
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
 require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
-/**
- * @see https://playwright.dev/docs/test-configuration
- */
-module.exports = defineConfig({
-  testDir: "./tests", // Directory where tests are located
-  testMatch: "**/*.spec.js", // Match all test files with .spec.js extension
+const isParallel = process.env.PARALLEL === "true";
 
-  /* Global setup for authentication */
+module.exports = defineConfig({
+  testDir: "./tests",
+  testMatch: "**/*.spec.js",
+
+  /* Global setup — one-time login, saves session to .auth/state.json */
   globalSetup: require.resolve("./auth.setup.js"),
 
-  /* Run tests in files in parallel */
-  fullyParallel: true,
+  /* Parallel mode controlled via PARALLEL=true env var */
+  fullyParallel: isParallel,
 
-  /* Fail the build on CI if you accidentally left test.only in the source code */
   forbidOnly: !!process.env.CI,
-
-  /* Retry on CI only */
   retries: process.env.CI ? 1 : 0,
 
-  /* Opt out of parallel tests on CI */
-  workers: process.env.CI ? 10 : 20,
+  /* Parallel: multiple workers | Serial: single worker */
+  workers: isParallel ? 4 : 1,
 
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [["allure-playwright"]], // Allure reporting for visualizing test results
+  reporter: [["allure-playwright"]],
 
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions */
   use: {
-    /* Base URL to use in actions like `await page.goto('/')` */
-    baseURL: process.env.BASE_URL, // Base URL from environment variables
+    baseURL: process.env.BASE_URL,
 
-    /* Use saved authentication state */
+    /* All tests reuse session from auth.setup.js — no re-login per test */
     storageState: process.env.AUTH_STATE_PATH,
 
-    timeout: 80000, // Set test timeout to 60 seconds
-    trace: "on", // Enable tracing for debugging
-    headless: false, // Run tests in non-headless mode
-    screenshot: "only-on-failure", // Capture screenshots only on test failures
-    video: "retain-on-failure", // Retain video recordings only on test failures
+    timeout: 80000,
+    trace: "on",
+    headless: false,
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
     launchOptions: {
-      args: ["--start-maximized"], // Start browser maximized
+      args: ["--start-maximized"],
     },
   },
-  /* Configure projects for major browsers */
+
   projects: [
     {
       name: "Google Chrome",
       use: {
-        // ...devices["Desktop Chrome"], channel: "chrome"
         viewport: null,
       },
     },
-    // Uncomment the following configurations to enable testing on other browsers
-
-    // {
-    //   name: "Firefox", // Test using Firefox
-    //   use: {
-    //     ...devices["Desktop Firefox"], // Use desktop Firefox configuration
-    //     viewport: { width: 1920, height: 1080 }, // Set viewport size
-    //   },
-    // },
-
-    // {
-    //   name: "Webkit", // Test using Webkit (Safari)
-    //   use: {
-    //     ...devices["Desktop Safari"], // Use desktop Safari configuration
-    //     viewport: { width: 1920, height: 1080 }, // Set viewport size
-    //   },
-    // },
-
-    /* Test against mobile viewports */
-    // {
-    //   name: "Mobile Chrome",
-    //   use: { ...devices["Pixel 5"] },
-    // },
-    // {
-    //   name: "Mobile Safari",
-    //   use: { ...devices["iPhone 12"] },
-    // },
-
-    /* Test against branded browsers */
-    // {
-    //   name: "Microsoft Edge",
-    //   use: { ...devices["Desktop Edge"], channel: "msedge" },
-    // },
   ],
-
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://127.0.0.1:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
 });

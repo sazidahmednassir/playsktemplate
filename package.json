@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "fulltest": "npx playwright test",
+    "test": "npx playwright test",
+    "test:parallel": "PARALLEL=true npx playwright test",
+    "test:serial": "npx playwright test",
     "smoke": "npx playwright test --grep @smoke",
     "regression": "npx playwright test --grep @regression"
   },

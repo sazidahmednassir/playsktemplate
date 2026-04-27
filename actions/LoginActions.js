@@ -1,4 +1,5 @@
 const LoginPage = require("../pages/LoginPage");
+const DashboardPage = require("../pages/DashboardPage");
 const { expect } = require("@playwright/test");
 const BaseActions = require("./BaseActions");
 
@@ -12,25 +13,21 @@ class LoginActions {
   }
 
   async login(username, password) {
-    // Step 1: Enter email and click Continue
-    await LoginPage.getUsername(this.page).fill(username);
-    await LoginPage.getContinueBtn(this.page).click();
-
-    // Step 2: Enter password and click Continue
-    await LoginPage.getPassword(this.page).fill(password);
-    await LoginPage.getContinueBtn(this.page).click();
+    await LoginPage.getUsernameInput(this.page).fill(username);
+    await LoginPage.getPasswordInput(this.page).fill(password);
+    await LoginPage.getLoginBtn(this.page).click();
   }
 
   async validLogin(username, password) {
     await this.login(username, password);
-    await LoginPage.getHomePageIdentifier(this.page).waitFor({
+    await DashboardPage.getDashboardHeading(this.page).waitFor({
       timeout: 10000,
     });
   }
 
-  async verifyHomepageVisible() {
-    const homePage = LoginPage.getHomePageIdentifier(this.page);
-    await expect(homePage).toBeVisible({ timeout: 10000 });
+  async verifyDashboardVisible() {
+    const heading = DashboardPage.getDashboardHeading(this.page);
+    await expect(heading).toBeVisible({ timeout: 10000 });
   }
 
   async verifyNotOnLoginPage() {
@@ -38,28 +35,21 @@ class LoginActions {
   }
 
   async loginWithoutStoredState(browser, url, username, password) {
-    // Create a new context without stored auth state
     const context = await browser.newContext({ storageState: undefined });
     const page = await context.newPage();
 
     try {
       await page.goto(url);
+      await page.getByPlaceholder("Username").fill(username);
+      await page.getByPlaceholder("Password").fill(password);
+      await page.getByRole("button", { name: "Login" }).click();
 
-      // Perform login
-      await page.locator("#username").fill(username);
-      await page.getByRole("button", { name: "Continue" }).click();
-      await page.getByRole("textbox", { name: "Password" }).fill(password);
-      await page.getByRole("button", { name: "Continue" }).click();
-
-      // Verify homepage is visible
       await page
-        .getByRole("heading", { name: "(Beta Version)" })
+        .locator(".oxd-topbar-header-breadcrumb", { hasText: "Dashboard" })
         .waitFor({ timeout: 10000 });
       await expect(
-        page.getByRole("heading", { name: "(Beta Version)" }),
+        page.locator(".oxd-topbar-header-breadcrumb", { hasText: "Dashboard" }),
       ).toBeVisible();
-
-      // Verify not on login page
       await expect(page).not.toHaveURL(/login/);
     } finally {
       await context.close();
@@ -67,10 +57,73 @@ class LoginActions {
   }
 
   async verifyLoggedIn() {
-    await LoginPage.getHomePageIdentifier(this.page).waitFor({
+    await DashboardPage.getDashboardHeading(this.page).waitFor({
       timeout: 10000,
     });
-    await expect(LoginPage.getHomePageIdentifier(this.page)).toBeVisible();
+    await expect(DashboardPage.getDashboardHeading(this.page)).toBeVisible();
+  }
+
+  async ensureLoggedIn(url, username, password) {
+    await this.page.goto(url, { waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("networkidle").catch(() => {});
+
+    // If session expired and we landed on login page, re-login
+    if (this.page.url().includes("login")) {
+      await LoginPage.getUsernameInput(this.page).fill(username);
+      await LoginPage.getPasswordInput(this.page).fill(password);
+      await LoginPage.getLoginBtn(this.page).click();
+      await DashboardPage.getDashboardHeading(this.page).waitFor({
+        timeout: 15000,
+      });
+    }
+  }
+
+  async verifyOnLoginPage() {
+    await expect(this.page).toHaveURL(/login/);
+  }
+
+  async verifyLoginErrorVisible() {
+    const errorMsg = LoginPage.getErrorMessage(this.page);
+    await expect(errorMsg).toBeVisible({ timeout: 10000 });
+  }
+
+  async verifyRequiredFieldError() {
+    const requiredError = LoginPage.getRequiredError(this.page);
+    await expect(requiredError.first()).toBeVisible({ timeout: 5000 });
+  }
+
+  async loginAndExpectFailure(browser, url, username, password) {
+    const context = await browser.newContext({ storageState: undefined });
+    const page = await context.newPage();
+
+    try {
+      await page.goto(url, { waitUntil: "networkidle" });
+      await page.getByPlaceholder("Username").waitFor({ timeout: 15000 });
+      await page.getByPlaceholder("Username").fill(username);
+      await page.getByPlaceholder("Password").fill(password);
+      await page.getByRole("button", { name: "Login" }).click();
+
+      const errorMsg = page.locator(".oxd-alert-content--error, .oxd-alert--error");
+      await expect(errorMsg.first()).toBeVisible({ timeout: 15000 });
+    } finally {
+      await context.close();
+    }
+  }
+
+  async loginWithEmptyFields(browser, url) {
+    const context = await browser.newContext({ storageState: undefined });
+    const page = await context.newPage();
+
+    try {
+      await page.goto(url);
+      await page.getByPlaceholder("Username").waitFor({ timeout: 10000 });
+      await page.getByRole("button", { name: "Login" }).click();
+
+      const requiredErrors = page.locator(".oxd-input-field-error-message");
+      await expect(requiredErrors.first()).toBeVisible({ timeout: 10000 });
+    } finally {
+      await context.close();
+    }
   }
 }
 

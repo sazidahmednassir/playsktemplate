@@ -1,3 +1,5 @@
+const DashboardPage = require("../pages/DashboardPage");
+
 class BaseActions {
   static async navigate(page, url) {
     await page.goto(url);
@@ -5,10 +7,7 @@ class BaseActions {
 
   static async navigateAndVerifyAuth(page, url) {
     await page.goto(url);
-    // Verify we're logged in
-    await page
-      .getByRole("heading", { name: "(Beta Version)" })
-      .waitFor({ timeout: 10000 });
+    await DashboardPage.getDashboardHeading(page).waitFor({ timeout: 10000 });
   }
 }
 

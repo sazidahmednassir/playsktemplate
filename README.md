@@ -15,6 +15,7 @@ playwrightskill/
 │       ├── add-test/SKILL.md              # /add-test — create new test spec
 │       ├── add-page/SKILL.md              # /add-page — create/update page object
 │       ├── add-action/SKILL.md            # /add-action — create/update action class
+│       ├── setup-env/SKILL.md             # /setup-env — project environment setup
 │       └── project-reference/SKILL.md     # Codebase map (auto-loaded)
 │
 ├── pages/                                 # Layer 1: Locators only
@@ -79,6 +80,17 @@ npx playwright install --with-deps
 cp .env.example .env
 ```
 
+Then update `.env` with your actual values:
+
+```env
+BASE_URL=https://your-app-url.com/login
+USER2_EMAIL=your_username
+USER2_PASSWORD=your_password
+AUTH_STATE_PATH=.auth/state.json
+```
+
+> Or use `/setup-env` skill — it handles the full setup interactively.
+
 ## Running Tests
 
 | Command | Mode | Workers |
@@ -120,6 +132,7 @@ This project uses Claude Code skills for automation:
 | Add Test | `/add-test` | Create new test spec following POM template |
 | Add Page | `/add-page` | Create or update page object with locators |
 | Add Action | `/add-action` | Create or update action class with methods |
+| Setup Env | `/setup-env` | Set up project environment: deps, .env, browsers, verify |
 
 **Scheduled**: Tests run daily at 12:00 PM. If any fail, self-heal auto-fixes locators.
 

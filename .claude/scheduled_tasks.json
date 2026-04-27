@@ -1,0 +1,11 @@
+{
+  "tasks": [
+    {
+      "id": "9fb75188",
+      "cron": "3 12 * * *",
+      "prompt": "Run the full Playwright test suite per CLAUDE.md Section 6 instructions:\n\n1. Run `npx playwright test` from /home/nassir/Documents/info23\n2. If ALL tests pass — report the results summary (pass count, duration)\n3. If ANY test fails:\n   - Read the error output carefully\n   - Identify which locators or UI elements changed\n   - Update the broken locators in the correct page object file under `pages/` (never in actions or tests)\n   - Re-run only the failing tests to confirm the fix\n   - Report: old locator -> new locator, which file was updated\n   - If a full page flow changed (not just a locator), update the action in `actions/` and flag it for review\n4. After everything is done, give a short summary of test results and any fixes applied",
+      "createdAt": 1777305151746,
+      "recurring": true
+    }
+  ]
+}

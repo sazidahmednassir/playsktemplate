@@ -1,9 +1,12 @@
 const LoginPage = {
-  getUsername: (page) => page.locator("#username"),
-  getPassword: (page) => page.getByRole("textbox", { name: "Password" }),
-  getContinueBtn: (page) => page.getByRole("button", { name: "Continue" }),
-  getHomePageIdentifier: (page) =>
-    page.getByRole("heading", { name: "(Beta Version)" }),
+  getUsernameInput: (page) => page.getByPlaceholder("Username"),
+  getPasswordInput: (page) => page.getByPlaceholder("Password"),
+  getLoginBtn: (page) => page.getByRole("button", { name: "Login" }),
+  getErrorMessage: (page) =>
+    page.locator(".oxd-alert-content--error", { hasText: "Invalid credentials" }),
+  getRequiredError: (page) => page.locator(".oxd-input-field-error-message"),
+  getForgotPasswordLink: (page) =>
+    page.locator(".orangehrm-login-forgot-header"),
 };
 
 module.exports = LoginPage;
