@@ -63,8 +63,8 @@ tests/    -> Specs using custom fixture
 
 ## Target Application
 
-- URL: https://opensource-demo.orangehrmlive.com/web/index.php/auth/login
-- Credentials: Admin / admin123
+- URL: Configured via `BASE_URL` in `.env`
+- Credentials: Configured via `USER2_EMAIL` / `USER2_PASSWORD` in `.env`
 - Tech: OrangeHRM (Vue.js SPA)
 
 ## NPM Scripts

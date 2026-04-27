@@ -1,8 +1,6 @@
 // @ts-check
 const { defineConfig, devices } = require("@playwright/test");
-const path = require("path");
-
-require("dotenv").config({ path: path.resolve(__dirname, ".env") });
+const config = require("./config/env.config");
 
 const isParallel = process.env.PARALLEL === "true";
 
@@ -25,10 +23,10 @@ module.exports = defineConfig({
   reporter: [["allure-playwright"]],
 
   use: {
-    baseURL: process.env.BASE_URL,
+    baseURL: config.baseURL,
 
     /* All tests reuse session from auth.setup.js — no re-login per test */
-    storageState: process.env.AUTH_STATE_PATH,
+    storageState: config.authStatePath,
 
     timeout: 80000,
     trace: "on",

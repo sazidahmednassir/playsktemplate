@@ -31,6 +31,7 @@ All detailed instructions live in `.claude/skills/`:
 - `/add-page` — Create or update a page object with new locators
 - `/add-action` — Create or update an action class with new methods
 - `/setup-env` — Set up project environment: deps, .env, browsers, verify
+- `/add-comments` — Add JSDoc comments to actions (locator traces) and tests (TC IDs, steps, validation)
 - `project-reference` — Full codebase map (auto-loaded, not user-invocable)
 
 ## Scheduled

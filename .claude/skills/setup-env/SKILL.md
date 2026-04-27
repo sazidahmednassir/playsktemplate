@@ -43,9 +43,9 @@ Then prompt the user to fill in their actual values:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `BASE_URL` | Full login URL of the target app | `https://opensource-demo.orangehrmlive.com/web/index.php/auth/login` |
-| `USER2_EMAIL` | Login username | `Admin` |
-| `USER2_PASSWORD` | Login password | `admin123` |
+| `BASE_URL` | Full login URL of the target app | `https://your-app-url.com/login` |
+| `USER2_EMAIL` | Login username | `your_username` |
+| `USER2_PASSWORD` | Login password | `your_password` |
 | `AUTH_STATE_PATH` | Path to save browser session | `.auth/state.json` (default, usually no change needed) |
 
 ### 5. Create Auth Directory

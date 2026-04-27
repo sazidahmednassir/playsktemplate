@@ -11,7 +11,7 @@ user-invocable: true
 A **Playwright E2E test automation framework** that tests the [OrangeHRM](https://opensource-demo.orangehrmlive.com/web/index.php/auth/login) demo web application. It uses the **Page Object Model (POM)** pattern with a 3-layer architecture and is fully managed by **Claude Code skills** for automation, self-healing, and code generation.
 
 **Target App**: OrangeHRM — an open-source HR management system (Vue.js SPA)
-**Credentials**: `Admin` / `admin123`
+**Credentials**: Stored in `.env` — see `.env.example` for template
 
 ---
 

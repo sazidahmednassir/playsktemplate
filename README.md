@@ -16,6 +16,7 @@ playwrightskill/
 │       ├── add-page/SKILL.md              # /add-page — create/update page object
 │       ├── add-action/SKILL.md            # /add-action — create/update action class
 │       ├── setup-env/SKILL.md             # /setup-env — project environment setup
+│       ├── add-comments/SKILL.md          # /add-comments — JSDoc for actions & tests
 │       └── project-reference/SKILL.md     # Codebase map (auto-loaded)
 │
 ├── pages/                                 # Layer 1: Locators only
@@ -133,6 +134,7 @@ This project uses Claude Code skills for automation:
 | Add Page | `/add-page` | Create or update page object with locators |
 | Add Action | `/add-action` | Create or update action class with methods |
 | Setup Env | `/setup-env` | Set up project environment: deps, .env, browsers, verify |
+| Add Comments | `/add-comments` | Add JSDoc comments to actions and test specs |
 
 **Scheduled**: Tests run daily at 12:00 PM. If any fail, self-heal auto-fixes locators.
 
