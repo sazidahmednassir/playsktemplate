@@ -9,13 +9,11 @@ async function globalSetup() {
   try {
     await page.goto(config.baseURL);
 
-    await page.getByPlaceholder("Username").fill(config.user2.username);
+    await page.getByPlaceholder("Username or email").fill(config.user2.username);
     await page.getByPlaceholder("Password").fill(config.user2.password);
-    await page.getByRole("button", { name: "Login" }).click();
+    await page.getByRole("button", { name: "Log in" }).click();
 
-    await page
-      .locator(".oxd-topbar-header-breadcrumb")
-      .waitFor({ timeout: 15000 });
+    await page.waitForURL("**/my/**", { timeout: 15000 });
 
     await context.storageState({ path: config.authStatePath });
 

@@ -16,6 +16,7 @@ module.exports = defineConfig({
 
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
+  timeout: 120000,
 
   /* Parallel: multiple workers | Serial: single worker */
   workers: isParallel ? 4 : 1,
@@ -28,7 +29,7 @@ module.exports = defineConfig({
     /* All tests reuse session from auth.setup.js — no re-login per test */
     storageState: config.authStatePath,
 
-    timeout: 80000,
+    actionTimeout: 80000,
     trace: "on",
     headless: false,
     screenshot: "only-on-failure",
