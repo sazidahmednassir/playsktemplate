@@ -4,6 +4,18 @@ const config = require("./config/env.config");
 
 const isParallel = process.env.PARALLEL === "true";
 
+// Chromium fake-media flags. Per-spec test.use() can override
+// --use-file-for-fake-video-capture to feed mismatch / no-face / multi-face Y4M.
+// The default here is the baseline face so any test that does not override
+// gets the "match" feed.
+const fakeMediaArgs = config.lms.useRealCamera
+  ? []
+  : [
+      "--use-fake-ui-for-media-stream",
+      "--use-fake-device-for-media-stream",
+      `--use-file-for-fake-video-capture=${config.lms.faceFixtures.baseline}`,
+    ];
+
 module.exports = defineConfig({
   testDir: "./tests",
   testMatch: "**/*.spec.js",
@@ -31,11 +43,11 @@ module.exports = defineConfig({
 
     actionTimeout: 80000,
     trace: "on",
-    headless: false,
+    headless: true,
     screenshot: "only-on-failure",
     video: "retain-on-failure",
     launchOptions: {
-      args: ["--start-maximized"],
+      args: ["--start-maximized", ...fakeMediaArgs],
     },
   },
 

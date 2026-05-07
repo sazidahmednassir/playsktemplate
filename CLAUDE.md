@@ -32,6 +32,7 @@ All detailed instructions live in `.claude/skills/`:
 - `/add-action` — Create or update an action class with new methods
 - `/setup-env` — Set up project environment: deps, .env, browsers, verify
 - `/add-comments` — Add JSDoc comments to actions (locator traces) and tests (TC IDs, steps, validation)
+- `/proctoring` — Author/update Proctoring Pro TCs: face validation, camera permission, suspicious activity, full proctoring flow. Documents the Y4M fixture system in `data/fixtures/face/`.
 - `project-reference` — Full codebase map (auto-loaded, not user-invocable)
 
 ## Scheduled
