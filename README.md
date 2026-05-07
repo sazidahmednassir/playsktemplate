@@ -1,72 +1,58 @@
-# OrangeHRM E2E Automation
+# Playwright E2E Automation Framework
 
-Playwright E2E test automation framework for [OrangeHRM](https://opensource-demo.orangehrmlive.com/web/index.php/auth/login) using the **Page Object Model (POM)** pattern. Managed by **Claude Code skills** for test execution, self-healing locators, and code generation.
+Playwright E2E test automation framework built using the **Page Object Model (POM)** pattern. Managed by **Claude Code skills** for test execution, self-healing locators, and code generation.
+
+Currently, this framework automates two primary applications:
+1. **OrangeHRM** (Core HR flows)
+2. **eLearning23 LMS - Proctoring Pro** (Face validation, camera permissions, and quiz attempts)
 
 ## Project Structure
 
-```
+```text
 playwrightskill/
 ├── .claude/
 │   ├── CLAUDE.md                          # AI identity, style, avoidances
 │   └── skills/                            # Claude Code skills
-│       ├── how-it-works/SKILL.md          # /how-it-works — full project guide
-│       ├── run-tests/SKILL.md             # /run-tests — execute test suite
-│       ├── self-heal/SKILL.md             # /self-heal — auto-fix broken locators
-│       ├── add-test/SKILL.md              # /add-test — create new test spec
-│       ├── add-page/SKILL.md              # /add-page — create/update page object
-│       ├── add-action/SKILL.md            # /add-action — create/update action class
-│       ├── setup-env/SKILL.md             # /setup-env — project environment setup
-│       ├── add-comments/SKILL.md          # /add-comments — JSDoc for actions & tests
-│       └── project-reference/SKILL.md     # Codebase map (auto-loaded)
 │
 ├── pages/                                 # Layer 1: Locators only
-│   ├── LoginPage.js                       # Login form selectors
-│   ├── DashboardPage.js                   # Dashboard widget selectors
-│   ├── ProfilePage.js                     # User dropdown selectors
-│   └── SidebarPage.js                     # Sidebar menu selectors
+│   ├── LoginPage.js, DashboardPage.js     # OrangeHRM pages
+│   └── StudentLMSPage.js                  # eLearning23 Proctoring Pro pages
 │
 ├── actions/                               # Layer 2: Business logic
-│   ├── BaseActions.js                     # Static navigation helpers
-│   ├── LoginActions.js                    # Login, verify, ensureLoggedIn
-│   ├── DashboardActions.js                # Dashboard widgets, Quick Launch
-│   ├── ProfileActions.js                  # User dropdown, logout
-│   └── NavigationActions.js               # Sidebar module navigation
+│   ├── LoginActions.js, DashboardActions.js
+│   └── StudentLMSActions.js               # eLearning23 Proctoring Pro actions
 │
 ├── tests/                                 # Layer 3: Test specs
-│   ├── fixture/
-│   │   └── customfixture.js               # Injects actions into all tests
+│   ├── fixture/customfixture.js           # Injects actions into all tests
 │   └── regression/
-│       ├── loginTests.spec.js             # Fresh login, stored auth (2 tests)
-│       ├── negativeLoginTests.spec.js     # Wrong password/user, empty fields (3 tests)
-│       ├── dashboardTests.spec.js         # Heading, cards, widgets (4 tests)
-│       ├── signOutTests.spec.js           # Logout, session invalidation (2 tests)
-│       └── navigationTests.spec.js        # Sidebar, Admin/PIM/Leave/Dir (5 tests)
+│       ├── loginTests.spec.js             # OrangeHRM tests
+│       ├── studentTC1_match.spec.js       # Proctoring Pro tests (TC-1 to TC-6)
+│       └── ...
+│
+├── data/fixtures/face/                    # Y4M Face Mocking files
+│   ├── generate-y4m.sh                    # Generates Y4M videos from JPEGs
+│   └── baseline.jpg                       # Real student face for TC-1 & TC-6
+│
+├── excel/                                 # Test Data & Reporting
+│   ├── Proctoring Pro.xlsx                # Source of truth test cases
+│   └── results/                           # Timestamped test execution reports
 │
 ├── config/
 │   └── env.config.js                      # Loads .env into config object
 │
-├── .env                                   # BASE_URL, credentials, auth path
-├── .env.example                           # Template for .env
-├── auth.setup.js                          # Global setup: one-time login, save session
+├── .env                                   # Environment variables
 ├── playwright.config.js                   # Runner config: Chrome, Allure, timeouts
-├── package.json                           # Dependencies and npm scripts
-└── .github/workflows/playwright.yml       # CI/CD: run tests, Allure report, email
+└── package.json                           # Dependencies and npm scripts
 ```
 
 ## Architecture
 
 3-layer Page Object Model:
 
-```
+```text
 TEST SPEC  →  calls  →  ACTION CLASS  →  uses  →  PAGE OBJECT
 (what to test)          (how to do it)            (where to find it)
 ```
-
-| Layer | Directory | Responsibility |
-|-------|-----------|---------------|
-| Pages | `pages/` | Locators only — no logic, no assertions |
-| Actions | `actions/` | Business logic — clicks, fills, assertions |
-| Tests | `tests/regression/` | Test scenarios — uses custom fixture |
 
 ## Setup
 
@@ -81,108 +67,68 @@ npx playwright install --with-deps
 cp .env.example .env
 ```
 
-Then update `.env` with your actual values:
+Update `.env` with your actual values:
 
 ```env
+# OrangeHRM
 BASE_URL=https://your-app-url.com/login
 USER2_EMAIL=your_username
 USER2_PASSWORD=your_password
 AUTH_STATE_PATH=.auth/state.json
-```
 
-> Or use `/setup-env` skill — it handles the full setup interactively.
+# eLearning23 LMS (Proctoring Pro)
+LMS_BASE_URL=https://education.elearning23.com/
+LMS_STUDENT_EMAIL=sazidnx23@yopmail.com
+LMS_STUDENT_PASSWORD=Admin@123
+LMS_COURSE_NAME=Computational Problem Solving
+LMS_QUIZ_NAME=Test Quiz
+```
 
 ## Running Tests
 
 | Command | Mode | Workers |
 |---------|------|---------|
 | `npm run test` | Serial (default) | 1 |
-| `npm run test:serial` | Serial | 1 |
-| `npm run test:parallel` | Parallel | 4 |
+| `npx playwright test --headed` | Headed mode (visible) | Configurable |
 | `npm run smoke` | Smoke tagged | Configured |
 | `npm run regression` | Regression tagged | Configured |
 
-## Authentication
+## Test Coverage
 
-Authentication runs **once** before all tests via `auth.setup.js` (globalSetup):
-
-1. Launches browser, logs into OrangeHRM
-2. Saves session to `.auth/state.json`
-3. All tests load this session automatically
-4. Each test's `beforeEach` calls `ensureLoggedIn()` — if session expired, re-logs in
-
-## Test Coverage (16 tests)
-
+### OrangeHRM
 | Suite | Tests |
 |-------|-------|
-| Login | Fresh login with valid credentials, stored auth verification |
-| Negative Login | Invalid password, invalid username, empty fields |
-| Dashboard | Dashboard heading, Quick Launch cards, widgets, card navigation |
-| Sign Out | Logout redirect, session invalidation after logout |
-| Navigation | Sidebar visibility, Admin, PIM, Leave, Directory modules |
+| Login | Fresh login, stored auth verification, negative logins |
+| Dashboard | Dashboard heading, Quick Launch cards, widgets |
+| Sign Out | Logout redirect, session invalidation |
+| Navigation | Sidebar visibility, Admin, PIM, Leave modules |
 
-## Claude Code Skills
+### Proctoring Pro (eLearning23 LMS)
+These tests assert the camera validation logic for quizzes on Moodle using automated Chromium fake-media flags.
 
-This project uses Claude Code skills for automation:
+| Suite | Description | Expected |
+|-------|-------------|----------|
+| **TC-1** | Face validation on quiz start matches real enrolled user | PASS ("Face matched") |
+| **TC-2** | Face mismatch (different user face video) | PASS ("Face not matched") |
+| **TC-3** | Camera permission denied block | PASS (Permission error) |
+| **TC-4** | No camera device physically available | PASS (Not detected error) |
+| **TC-5 Leg A** | Suspicious activity - no face detected | PASS (Face not matched) |
+| **TC-5 Leg B** | Suspicious activity - multiple faces detected | PASS (Face not matched) |
+| **TC-6** | Full flow: Face Match -> Agree -> Attempt Quiz -> Submit | PASS (Successful submission) |
 
-| Skill | Command | Description |
-|-------|---------|-------------|
-| How It Works | `/how-it-works` | Full project guide with architecture and references |
-| Run Tests | `/run-tests` | Execute test suite (serial or parallel) |
-| Self-Heal | `/self-heal` | Auto-fix broken locators after test failures |
-| Add Test | `/add-test` | Create new test spec following POM template |
-| Add Page | `/add-page` | Create or update page object with locators |
-| Add Action | `/add-action` | Create or update action class with methods |
-| Setup Env | `/setup-env` | Set up project environment: deps, .env, browsers, verify |
-| Add Comments | `/add-comments` | Add JSDoc comments to actions and test specs |
+## Proctoring Pro: Fake Webcams & Face Matching
+Playwright runs these tests using Chromium's `--use-file-for-fake-video-capture` flag to simulate webcam feeds without physical hardware.
 
-**Scheduled**: Tests run daily at 12:00 PM. If any fail, self-heal auto-fixes locators.
+1. Store the actual student's photo at `data/fixtures/face/baseline.jpg`.
+2. Run `bash data/fixtures/face/generate-y4m.sh` *(Requires `ffmpeg` installed via `brew install ffmpeg`)*.
+3. Playwright automatically loads `.y4m` files mapped to specific test cases to trigger the expected proctoring outcomes!
+
+## Excel Result Reporting
+For the Proctoring Pro test cases, results are automatically written to a timestamped Excel file.
+- **Source**: `excel/Proctoring Pro.xlsx`
+- **Output**: `excel/results/Proctoring Pro - <timestamp>.xlsx`
+
+Check the `Actual Result` column inside the `Student` sheet to see PASS/FAIL status along with error messages and screenshots!
 
 ## CI/CD
-
-GitHub Actions (`.github/workflows/playwright.yml`):
-- Triggers on push/PR to `main` and daily schedule
-- Installs deps, Playwright browsers, runs tests
-- Generates Allure single-file HTML report
-- Emails report via Gmail SMTP
-
-**Required Secrets**: `EMAIL_USERNAME`, `EMAIL_PASSWORD`
-
-## Writing Tests
-
-```javascript
-const { test } = require("../fixture/customfixture");
-const { expect } = require("@playwright/test");
-const config = require("../../config/env.config");
-
-test.describe("Module Tests", () => {
-  test.beforeEach(async ({ actions }) => {
-    await actions.login.ensureLoggedIn(
-      config.baseURL,
-      config.user2.username,
-      config.user2.password,
-    );
-  });
-
-  test("Test description", async ({ actions, page }) => {
-    await actions.dashboard.verifyDashboardLoaded();
-    await actions.navigation.navigateToModule("Admin");
-  });
-});
-```
-
-**Available actions in fixture:**
-- `actions.login` — Login, verify, ensureLoggedIn
-- `actions.dashboard` — Dashboard widgets, Quick Launch
-- `actions.profile` — User dropdown, logout
-- `actions.navigation` — Sidebar module navigation
-
-## Tech Stack
-
-| Package | Purpose |
-|---------|---------|
-| `@playwright/test` | E2E test framework |
-| `allure-playwright` | Test reporting |
-| `dotenv` | Environment variable management |
-| `xlsx` | Excel data support |
-| `@cucumber/cucumber` | BDD support (available) |
+GitHub Actions (`.github/workflows/playwright.yml`) triggers on push/PR to `main` and daily schedule. It runs tests, generates an Allure HTML report, and optionally emails it.
