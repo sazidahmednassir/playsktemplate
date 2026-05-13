@@ -35,6 +35,23 @@ All detailed instructions live in `.claude/skills/`:
 - `/proctoring` — Author/update Proctoring Pro TCs: face validation, camera permission, suspicious activity, full proctoring flow. Documents the Y4M fixture system in `data/fixtures/face/`.
 - `project-reference` — Full codebase map (auto-loaded, not user-invocable)
 
+## Rules: Keyword Triggers
+
+### "generate test case" (and variants: "create tc", "write tc", "add tc")
+
+When the user says any of these phrases:
+
+1. **Check existing TCs first** — grep the spec files (`tests/`) for already-written TC IDs and titles. Build a list of what exists.
+2. **Skip TCs that already exist** — do not rewrite or overwrite any TC that is already present in the codebase.
+3. **Only generate missing TCs** — identify which TCs from the Excel/task list are NOT in the codebase, and generate only those.
+4. Invoke the appropriate skill automatically — `/proctoring` for Student-tab TCs, `/add-test` for all others.
+5. Use the Playwright MCP server (`browser_navigate` + `browser_snapshot`) to inspect live DOM and derive accurate locators before writing any page object or spec code.
+6. Follow `codebase-rules` exactly (locators in `pages/`, logic in `actions/`, assertions in spec only).
+7. Register the TC title in `TC_BY_TITLE` so `ExcelResultWriter` can capture the result.
+8. After writing, run the TC and confirm the Excel result is written to `excel/results/`.
+
+No confirmation step needed — start immediately when the trigger keyword is detected.
+
 ## Rules: TC Execution and Excel Update Protocol
 
 For every TC listed in `data/Proctoring Pro.xlsx` (mirrored at `excel/Proctoring Pro.xlsx`):
@@ -58,6 +75,16 @@ For every TC listed in `data/Proctoring Pro.xlsx` (mirrored at `excel/Proctoring
 ### Never skip the Excel update
 
 Every TC execution must produce a result row in `excel/results/`. If `ExcelResultWriter` throws, fix it before marking the TC done.
+
+### Clean up old Excel results before every test execution
+
+Before running any TC (single or full suite), delete all previously generated files in `excel/results/` to prevent accumulation:
+
+```bash
+rm -f excel/results/*.xlsx
+```
+
+Run this cleanup step first, then execute the test. The `ExcelResultWriter` will write a fresh timestamped result file for the current run only.
 
 ## Rules: After Test Failures
 

@@ -32,6 +32,10 @@ const COLUMNS = {
 };
 
 function timestampForRun() {
+  // Reuse the timestamp set by globalSetup so all workers share one output file.
+  if (process.env.PLAYWRIGHT_RUN_TIMESTAMP) {
+    return process.env.PLAYWRIGHT_RUN_TIMESTAMP;
+  }
   const d = new Date();
   const pad = (n) => String(n).padStart(2, "0");
   return (

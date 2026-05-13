@@ -7,7 +7,7 @@ allowed-tools: Bash(npx playwright*) Bash(npm run test*) Read
 
 # Run Tests
 
-Run the Playwright E2E test suite against OrangeHRM demo site.
+Run the Playwright E2E test suite against the eLearning23 LMS (Proctoring Pro).
 
 ## Two Modes
 

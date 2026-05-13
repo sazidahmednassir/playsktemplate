@@ -19,38 +19,29 @@ class StudentLMSActions {
    * @param {string} password
    */
   async loginAsStudent(baseURL, email, password) {
-    // Navigate to the Moodle login page directly
+    const myURL = baseURL.replace(/\/$/, "") + "/my/";
     const loginURL = baseURL.replace(/\/$/, "") + "/login/index.php";
-    await this.page.goto(loginURL, { waitUntil: "domcontentloaded" });
 
-    // Handle Moodle's "already logged in" dialog if it appears
-    const alreadyLoggedInCancel = this.page.getByRole("button", { name: "Cancel" });
-    const usernameField = StudentLMSPage.getEmailInput(this.page);
+    // Navigate to /my/ — if storageState provided a valid session we arrive
+    // directly and can skip the login form entirely.
+    await this.page.goto(myURL, { waitUntil: "domcontentloaded" });
 
-    const whichAppeared = await Promise.race([
-      alreadyLoggedInCancel.waitFor({ state: "visible", timeout: 10000 })
-        .then(() => "already-logged-in"),
-      usernameField.waitFor({ state: "visible", timeout: 10000 })
-        .then(() => "login-form"),
-    ]).catch(() => "unknown");
-
-    if (whichAppeared === "already-logged-in") {
-      // User is already logged in — click Cancel to stay logged in
-      await alreadyLoggedInCancel.click();
-      await this.page.waitForURL("**/my/**", { timeout: 15000 });
+    if (this.page.url().includes("/my/")) {
       await this.page.waitForLoadState("networkidle");
-    } else {
-      // Normal login flow
-      await usernameField.fill(email);
-      await StudentLMSPage.getPasswordInput(this.page).fill(password);
-      await StudentLMSPage.getLoginBtn(this.page).click();
-
-      // Wait until redirected to dashboard (/my/)
-      await this.page.waitForURL("**/my/**", { timeout: 15000 });
-      await this.page.waitForLoadState("networkidle");
+      return;
     }
 
-    // Verify dashboard loaded
+    // Moodle redirected to login — fill credentials and submit.
+    await this.page.goto(loginURL, { waitUntil: "domcontentloaded" });
+    const usernameField = StudentLMSPage.getEmailInput(this.page);
+    await usernameField.waitFor({ state: "visible" });
+    await usernameField.fill(email);
+    await StudentLMSPage.getPasswordInput(this.page).fill(password);
+    await StudentLMSPage.getLoginBtn(this.page).click();
+
+    await this.page.waitForURL("**/my/**", { timeout: 30000 });
+    await this.page.waitForLoadState("networkidle");
+
     await expect(StudentLMSPage.getDashboardHeading(this.page))
       .toBeVisible({ timeout: 15000 });
   }
@@ -261,6 +252,13 @@ class StudentLMSActions {
    * Finish the quiz attempt — clicks "Finish attempt" then "Submit all and finish".
    * Confirmation dialog (if any) is auto-confirmed.
    */
+  async logout() {
+    await StudentLMSPage.getUserMenuBtn(this.page).click();
+    await StudentLMSPage.getLogoutLink(this.page).waitFor({ state: "visible" });
+    await StudentLMSPage.getLogoutLink(this.page).click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
   async finishAttempt() {
     const finish = StudentLMSPage.getFinishAttemptBtn(this.page);
     if (await finish.isVisible().catch(() => false)) {

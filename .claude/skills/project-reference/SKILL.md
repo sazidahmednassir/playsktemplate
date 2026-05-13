@@ -15,64 +15,100 @@ actions/  -> Business logic (interactions, assertions)
 tests/    -> Specs using custom fixture
 ```
 
+## Target Application
+
+- **App**: eLearning23 LMS (Moodle) — `https://education.elearning23.com/`
+- **Plugin under test**: Proctoring Pro (face validation on quiz attempts)
+- **Credentials**: loaded from `.env` via `config/env.config.js`
+
 ## Page Objects
 
-| File | Locators |
-|------|----------|
-| `pages/LoginPage.js` | getUsernameInput, getPasswordInput, getLoginBtn, getErrorMessage, getRequiredError, getForgotPasswordLink |
-| `pages/DashboardPage.js` | getBreadcrumb, getDashboardHeading, getQuickLaunchCards, getQuickLaunchByTitle, getTimeAtWorkWidget, getMyActionsWidget |
-| `pages/ProfilePage.js` | getUserDropdown, getUserDropdownName, getLogoutLink, getAboutLink, getChangePasswordLink, getSupportLink |
-| `pages/SidebarPage.js` | getSidebar, getMenuItemByName, getSearchInput |
+| File | Key Locators |
+|------|-------------|
+| `pages/StudentLMSPage.js` | getEmailInput, getPasswordInput, getLoginBtn — login form |
+| | getDashboardHeading, getMyCoursesLink, getCourseLink — navigation |
+| | getAttemptQuizBtn, getContinueAttemptBtn — quiz attempt entry |
+| | getValidateFaceBtn(`#fcvalidate`) — Proctoring Pro trigger |
+| | getFaceValidationPopup, getFaceMatchedMessage, getFaceMismatchMessage — validation results |
+| | getValidationAgreementCheckbox, getStartAttemptBtn(`#id_submitbutton`) — start attempt |
+| | getCameraPermissionError, getNoCameraDeviceError — camera error states |
+| | getNoFaceWarning, getMultipleFacesWarning, getSuspiciousActivityBanner — TC-5 states |
+| | getQuizQuestionStem, getFinishAttemptBtn, getSubmitAllAndFinishBtn — quiz in progress |
 
 ## Actions
 
 | File | Methods |
 |------|---------|
-| `actions/BaseActions.js` | navigate(), navigateAndVerifyAuth() |
-| `actions/LoginActions.js` | login(), validLogin(), loginWithoutStoredState(), loginAndExpectFailure(), loginWithEmptyFields(), verifyLoggedIn(), verifyOnLoginPage(), verifyLoginErrorVisible(), verifyRequiredFieldError(), ensureLoggedIn() |
-| `actions/DashboardActions.js` | verifyDashboardLoaded(), verifyQuickLaunchVisible(), getQuickLaunchCount(), clickQuickLaunchCard(), verifyTimeAtWorkWidget(), verifyMyActionsWidget() |
-| `actions/ProfileActions.js` | openUserDropdown(), verifyDropdownOpen(), logout(), verifyUserName() |
-| `actions/NavigationActions.js` | verifySidebarVisible(), navigateToModule(), verifyOnModule(), searchSidebar() |
+| `actions/StudentLMSActions.js` | loginAsStudent(baseURL, email, password) |
+| | openCourseQuiz(courseName, quizName) |
+| | clickAttemptOrContinue() |
+| | clickValidateFace() |
+| | verifyFaceValidationMatched() |
+| | readFaceValidationMessage() |
+| | verifyFaceValidationMismatch() |
+| | verifyCameraPermissionError() |
+| | verifyNoCameraDeviceError() |
+| | verifyNoFaceWarning() |
+| | verifyMultipleFacesWarning() |
+| | startAttempt() |
+| | verifyQuizInProgressWithProctoring() |
+| | finishAttempt() |
 
-## Test Specs (16 tests)
+## Test Specs (7 tests)
 
-| File | Tests | Count |
-|------|-------|-------|
-| `tests/regression/loginTests.spec.js` | Fresh login, stored auth login | 2 |
-| `tests/regression/negativeLoginTests.spec.js` | Invalid password, invalid username, empty fields | 3 |
-| `tests/regression/dashboardTests.spec.js` | Dashboard heading, Quick Launch cards, widgets, card click | 4 |
-| `tests/regression/signOutTests.spec.js` | Logout redirect, session invalidation | 2 |
-| `tests/regression/navigationTests.spec.js` | Sidebar visible, Admin, PIM, Leave, Directory | 5 |
+| File | Tests | Tag | Project |
+|------|-------|-----|---------|
+| `tests/student/student.spec.js` | TC-1 Face matched | `@baseline` | student-baseline |
+| | TC-2 Face mismatch | `@mismatch` | student-mismatch |
+| | TC-3 Camera permission denied | `@permissionDenied` | student-permission-denied |
+| | TC-4 No camera device | `@noCamera` | student-no-camera |
+| | TC-5a No face warning | `@noFace` | student-no-face |
+| | TC-5b Multiple faces warning | `@multiFace` | student-multi-face |
+| | TC-6 Full proctoring flow | `@baseline` | student-baseline |
 
 ## Fixture
 
-`tests/fixture/customfixture.js` — Injects `actions.login`, `actions.dashboard`, `actions.profile`, `actions.navigation` into all tests.
+`tests/fixture/customfixture.js` — Injects `actions.studentLms` (StudentLMSActions) into all tests.
 
 ## Config & Auth
 
 | File | Purpose |
 |------|---------|
-| `.env` | BASE_URL, USER2_EMAIL, USER2_PASSWORD, AUTH_STATE_PATH |
-| `config/env.config.js` | Loads .env into `config` object |
+| `.env` | LMS_BASE_URL, LMS_STUDENT_EMAIL, LMS_STUDENT_PASSWORD, LMS_COURSE_NAME, LMS_QUIZ_NAME, USE_REAL_CAMERA |
+| `.env.example` | Template for all env vars |
+| `config/env.config.js` | Loads .env into `config` object with `config.lms.*` namespace |
 | `auth.setup.js` | Global setup — one-time login, saves session to `.auth/state.json` |
-| `playwright.config.js` | Chrome, Allure, 80s timeout, serial/parallel via `PARALLEL` env var |
+| `playwright.config.js` | Per-tag browser projects, fake-media flags, Allure reporter, 120s timeout |
+| `.mcp.json` | Playwright MCP server (`@playwright/mcp`) for live DOM inspection |
+
+## Camera Fixtures (Y4M)
+
+| File | Purpose |
+|------|---------|
+| `data/fixtures/face/baseline.y4m` | Matching face — TC-1, TC-6 |
+| `data/fixtures/face/mismatch.y4m` | Non-matching face — TC-2 |
+| `data/fixtures/face/no-face.y4m` | Empty frame — TC-5a |
+| `data/fixtures/face/multi-face.y4m` | Two faces — TC-5b |
+| `data/fixtures/face/generate-y4m.sh` | Regenerates Y4M from source JPEGs |
+
+Y4M files are git-ignored. Run `generate-y4m.sh` on every fresh clone.
+
+## Excel Integration
+
+| File | Purpose |
+|------|---------|
+| `data/Proctoring Pro.xlsx` | Source test case matrix (Student tab) |
+| `excel/Proctoring Pro.xlsx` | Mirror copy |
+| `excel/results/` | Timestamped PASS/FAIL exports written by ExcelResultWriter |
+| `utils/ExcelResultWriter.js` | Writes TC result to column G after each test via `afterEach` |
 
 ## CI/CD
 
 `.github/workflows/playwright.yml` — GitHub Actions: install, run tests, Allure report, email results.
 
-## Target Application
-
-- URL: Configured via `BASE_URL` in `.env`
-- Credentials: Configured via `USER2_EMAIL` / `USER2_PASSWORD` in `.env`
-- Tech: OrangeHRM (Vue.js SPA)
-
 ## NPM Scripts
 
 | Command | Mode |
 |---------|------|
-| `npm run test` | Default (serial) |
-| `npm run test:serial` | Serial — 1 worker |
+| `npm run test:serial` | Serial — 1 worker (default) |
 | `npm run test:parallel` | Parallel — 4 workers |
-| `npm run smoke` | Smoke tagged tests |
-| `npm run regression` | Regression tagged tests |

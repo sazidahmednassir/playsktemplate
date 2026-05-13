@@ -29,7 +29,7 @@ camera setup, and the conventions every TC must follow.
 ## Architecture (3-layer POM, same as the rest of the repo)
 
 ```
-tests/regression/studentTests.spec.js
+tests/student/student.spec.js
         │ uses
         ▼
 actions/StudentLMSActions.js     ← business logic + assertions
@@ -76,8 +76,7 @@ test.describe("TC-X (mismatch feed)", () => {
 });
 ```
 
-The helper `fakeCameraArgs(fixturePath)` in `tests/regression/studentTests.spec.js`
-builds the args object for you.
+Camera args per project are already defined in `playwright.config.js` via `fakeMediaArgs()`. No need to override in the test body — pick the right `@tag` and the config handles it.
 
 ### Fixture catalogue
 
@@ -138,7 +137,7 @@ runs — a timestamped copy lands in `excel/results/`.
 
 When you add a new TC, also add it to:
 
-1. `tests/regression/studentTests.spec.js` (a new `test(...)` plus an entry in
+1. `tests/student/student.spec.js` (a new `test(...)` plus an entry in
    `TC_BY_TITLE`).
 2. The `TC_BY_TITLE` map — the title MUST match the `test()` title exactly.
 
@@ -162,7 +161,7 @@ When you add a new TC, also add it to:
 2. Add a row to `data/Proctoring Pro.xlsx` → "Student".
 3. Add locators to `pages/StudentLMSPage.js` if needed.
 4. Add an action method to `actions/StudentLMSActions.js`.
-5. Add the spec to `tests/regression/studentTests.spec.js` and update
+5. Add the spec to `tests/student/student.spec.js` and update
    `TC_BY_TITLE`.
-6. Run `npx playwright test tests/regression/studentTests.spec.js --headed`.
+6. Run `npx playwright test tests/student/student.spec.js --headed`.
 7. Paste the run summary; the writer overwrites column G with PASS/FAIL.

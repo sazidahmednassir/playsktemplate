@@ -51,10 +51,7 @@ const NewActions = require("../../actions/NewActions");
 exports.test = base.extend({
   actions: async ({ page }, use) => {
     const actions = {
-      login: new LoginActions(page),
-      dashboard: new DashboardActions(page),
-      profile: new ProfileActions(page),
-      navigation: new NavigationActions(page),
+      studentLms: new StudentLMSActions(page),
       newAction: new NewActions(page),  // <-- add here
     };
     await use(actions);
@@ -66,8 +63,4 @@ exports.test = base.extend({
 
 ## Existing Actions
 
-- `actions/BaseActions.js` — Static navigation helpers
-- `actions/LoginActions.js` — Login, logout verification, ensureLoggedIn
-- `actions/DashboardActions.js` — Dashboard widgets and Quick Launch
-- `actions/ProfileActions.js` — User dropdown and logout
-- `actions/NavigationActions.js` — Sidebar navigation between modules
+- `actions/StudentLMSActions.js` — Full Proctoring Pro flow: login, navigate to quiz, face validation, camera checks, suspicious activity, start/finish attempt

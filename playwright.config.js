@@ -25,7 +25,7 @@ const fakeMediaArgs = (videoFile) =>
         `--use-file-for-fake-video-capture=${videoFile}`,
       ];
 
-const studentTagPattern = /@(baseline|mismatch|permissionDenied|noCamera|noFace|multiFace)\b/;
+const studentTagPattern = /@(baseline|mismatch|permissionDenied|noCamera|noFace|multiFace|logout)\b/;
 
 module.exports = defineConfig({
   testDir: "./tests",
@@ -80,7 +80,7 @@ module.exports = defineConfig({
       grep: /@baseline\b/,
       use: {
         viewport: null,
-        storageState: undefined,
+        storageState: { cookies: [], origins: [] },
         baseURL: config.lms.baseURL,
         permissions: ["camera", "microphone"],
         launchOptions: {
@@ -93,7 +93,7 @@ module.exports = defineConfig({
       grep: /@mismatch\b/,
       use: {
         viewport: null,
-        storageState: undefined,
+        storageState: { cookies: [], origins: [] },
         baseURL: config.lms.baseURL,
         permissions: ["camera", "microphone"],
         launchOptions: {
@@ -106,7 +106,7 @@ module.exports = defineConfig({
       grep: /@permissionDenied\b/,
       use: {
         viewport: null,
-        storageState: undefined,
+        storageState: { cookies: [], origins: [] },
         baseURL: config.lms.baseURL,
         permissions: [], // no camera/mic granted at context creation
         launchOptions: {
@@ -119,7 +119,7 @@ module.exports = defineConfig({
       grep: /@noCamera\b/,
       use: {
         viewport: null,
-        storageState: undefined,
+        storageState: { cookies: [], origins: [] },
         baseURL: config.lms.baseURL,
         permissions: ["camera", "microphone"],
         launchOptions: {
@@ -133,7 +133,7 @@ module.exports = defineConfig({
       grep: /@noFace\b/,
       use: {
         viewport: null,
-        storageState: undefined,
+        storageState: { cookies: [], origins: [] },
         baseURL: config.lms.baseURL,
         permissions: ["camera", "microphone"],
         launchOptions: {
@@ -146,11 +146,24 @@ module.exports = defineConfig({
       grep: /@multiFace\b/,
       use: {
         viewport: null,
-        storageState: undefined,
+        storageState: { cookies: [], origins: [] },
         baseURL: config.lms.baseURL,
         permissions: ["camera", "microphone"],
         launchOptions: {
           args: ["--start-maximized", ...fakeMediaArgs(config.lms.faceFixtures.multiFace)],
+        },
+      },
+    },
+    {
+      name: "student-logout",
+      grep: /@logout\b/,
+      use: {
+        viewport: null,
+        storageState: { cookies: [], origins: [] },
+        baseURL: config.lms.baseURL,
+        permissions: ["camera", "microphone"],
+        launchOptions: {
+          args: ["--start-maximized", ...fakeMediaArgs(config.lms.faceFixtures.baseline)],
         },
       },
     },

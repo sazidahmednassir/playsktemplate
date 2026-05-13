@@ -2,7 +2,23 @@
   "permissions": {
     "allow": [
       "Bash(npx @playwright/mcp --version)",
-      "Bash(npm list *)"
+      "Bash(npm list *)",
+      "Skill(self-heal)",
+      "Skill(self-heal:*)",
+      "Skill(add-test)",
+      "Skill(add-test:*)",
+      "Skill(add-page)",
+      "Skill(add-page:*)",
+      "Skill(add-action)",
+      "Skill(add-action:*)",
+      "Skill(add-comments)",
+      "Skill(add-comments:*)",
+      "Skill(proctoring)",
+      "Skill(proctoring:*)",
+      "Edit(/.claude/skills/proctoring/**)",
+      "Skill(setup-env)",
+      "Skill(setup-env:*)",
+      "mcp__playwright__browser_fill_form"
     ]
   }
 }

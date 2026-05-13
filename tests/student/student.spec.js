@@ -1,7 +1,11 @@
+const path = require("path");
 const { test } = require("../fixture/customfixture");
 const { expect } = require("@playwright/test");
 const config = require("../../config/env.config");
 const { getWriter } = require("../../utils/ExcelResultWriter");
+
+// Auth file created in globalSetup (auth.setup.js) before any project runs.
+const STUDENT_AUTH_FILE = path.resolve(__dirname, "../../.auth/student.json");
 
 // Student | Proctoring Pro — all TCs from the "Student" tab of excel/Proctoring Pro.xlsx.
 // Per codebase-rules §2: every TC under one Excel tab lives in one spec file.
@@ -25,9 +29,13 @@ const TC_BY_TITLE = {
   "TC-5a Suspicious activity (no face) shows a warning @noFace": { sheet: "Student", tcId: 5, legLabel: "Leg A: No Face" },
   "TC-5b Suspicious activity (multiple faces) shows a warning @multiFace": { sheet: "Student", tcId: 5, legLabel: "Leg B: Multi Face" },
   "TC-6 Full proctoring flow — face match, start attempt, submit @baseline": { sheet: "Student", tcId: 6 },
+  "TC-7 Student logs out and is redirected to homepage @logout": { sheet: "Student", tcId: 7 },
 };
 
 test.describe("Student | Proctoring Pro", () => {
+  // Session created once in globalSetup (auth.setup.js); reused by all tests here.
+  test.use({ storageState: STUDENT_AUTH_FILE });
+
   test.afterEach(async ({}, testInfo) => {
     const meta = TC_BY_TITLE[testInfo.title];
     if (!meta) return;
@@ -160,5 +168,15 @@ test.describe("Student | Proctoring Pro", () => {
     await actions.studentLms.startAttempt();
     await actions.studentLms.verifyQuizInProgressWithProctoring();
     await actions.studentLms.finishAttempt();
+  });
+
+  test("TC-7 Student logs out and is redirected to homepage @logout", async ({ actions, page }) => {
+    await actions.studentLms.loginAsStudent(
+      config.lms.baseURL,
+      config.lms.student.email,
+      config.lms.student.password,
+    );
+    await actions.studentLms.logout();
+    await expect(page).toHaveURL(config.lms.baseURL);
   });
 });

@@ -8,60 +8,63 @@ user-invocable: true
 
 ## What Is This?
 
-A **Playwright E2E test automation framework** that tests the [OrangeHRM](https://opensource-demo.orangehrmlive.com/web/index.php/auth/login) demo web application. It uses the **Page Object Model (POM)** pattern with a 3-layer architecture and is fully managed by **Claude Code skills** for automation, self-healing, and code generation.
+A **Playwright E2E automation framework** for the **eLearning23 LMS** proctoring application, not OrangeHRM. This repo targets the Moodle-based site at:
 
-**Target App**: OrangeHRM — an open-source HR management system (Vue.js SPA)
-**Credentials**: Stored in `.env` — see `.env.example` for template
+`https://education.elearning23.com/login/index.php`
+
+It is an LMS/proctoring automation project with special handling for camera validation, face matching, and fake webcam fixtures.
+
+**Target App**: eLearning23 LMS — a Moodle-based learning management system
+**Project Type**: LMS / proctoring automation (face validation, camera permissions, quiz attempt flows)
+**Authentication**: Stored in `.env` and loaded by `config/env.config.js`
+
+### Key project challenge
+
+- The proctoring tests require a **baseline face image** and generated `.y4m` fixtures for Chromium fake-camera input.
+- `data/fixtures/face/baseline.jpg` is the reference face image used to generate matching camera feeds.
+- The test runtime depends on `.env` values and fake-media browser flags, not just simple page navigation.
 
 ---
 
-## Project Architecture
+## Repo Architecture
 
 ```
-playwrightskill/
-├── .claude/
-│   ├── CLAUDE.md                          # AI identity, style, avoidances
-│   └── skills/                            # All Claude Code skills
+playreltemp/
+├── CLAUDE.md                              # AI identity, style, rules (project root)
+├── .claude/                               # Claude Code config
+│   └── skills/                            # Claude Code skills
 │       ├── how-it-works/SKILL.md          # This file — full project guide
 │       ├── run-tests/SKILL.md             # /run-tests — execute test suite
 │       ├── self-heal/SKILL.md             # /self-heal — auto-fix broken locators
 │       ├── add-test/SKILL.md              # /add-test — create new test spec
 │       ├── add-page/SKILL.md              # /add-page — create/update page object
 │       ├── add-action/SKILL.md            # /add-action — create/update action class
+│       ├── add-comments/SKILL.md          # /add-comments — add JSDoc to actions and specs
+│       ├── proctoring/SKILL.md            # /proctoring — author/update Proctoring Pro TCs
+│       ├── setup-env/SKILL.md             # /setup-env — first-time project setup
+│       ├── codebase-rules/SKILL.md        # rules (auto-loaded, not user-invocable)
 │       └── project-reference/SKILL.md     # Codebase map (auto-loaded)
-│
-├── pages/                                 # LAYER 1: Locators only
-│   ├── LoginPage.js                       # Login form selectors
-│   ├── DashboardPage.js                   # Dashboard widget selectors
-│   ├── ProfilePage.js                     # User dropdown selectors
-│   └── SidebarPage.js                     # Sidebar menu selectors
-│
-├── actions/                               # LAYER 2: Business logic
-│   ├── BaseActions.js                     # Static navigation helpers
-│   ├── LoginActions.js                    # Login, verify, ensureLoggedIn
-│   ├── DashboardActions.js                # Dashboard widgets, Quick Launch
-│   ├── ProfileActions.js                  # User dropdown, logout
-│   └── NavigationActions.js               # Sidebar module navigation
-│
-├── tests/                                 # LAYER 3: Test specs
+├── .mcp.json                              # Playwright MCP server config
+├── actions/
+│   └── StudentLMSActions.js               # Proctoring business logic and assertions
+├── pages/
+│   └── StudentLMSPage.js                  # LMS locators only
+├── tests/
 │   ├── fixture/
-│   │   └── customfixture.js               # Injects actions into all tests
-│   └── regression/
-│       ├── loginTests.spec.js             # 2 tests: fresh login, stored auth
-│       ├── negativeLoginTests.spec.js     # 3 tests: wrong password/user, empty
-│       ├── dashboardTests.spec.js         # 4 tests: heading, cards, widgets
-│       ├── signOutTests.spec.js           # 2 tests: logout, session invalidation
-│       └── navigationTests.spec.js        # 5 tests: sidebar, Admin/PIM/Leave/Dir
-│
+│   │   └── customfixture.js               # Shared fixture injection
+│   └── student/
+│       └── student.spec.js                # Proctoring Pro test suite
 ├── config/
-│   └── env.config.js                      # Loads .env into config object
-│
-├── .env                                   # BASE_URL, credentials, auth path
-├── .env.example                           # Template for .env
-├── auth.setup.js                          # Global setup: one-time login, save session
-├── playwright.config.js                   # Runner config: Chrome, Allure, timeouts
+│   └── env.config.js                      # Loads `.env` into config object
+├── data/fixtures/face/                    # Face fixture assets and Y4M generation
+│   ├── generate-y4m.sh
+│   └── baseline.jpg
+├── excel/
+│   ├── Proctoring Pro.xlsx                # Source test matrix
+│   └── results/                           # Timestamped Excel exports
+├── playwright.config.js                   # Runner config and browser options
 ├── package.json                           # Dependencies and npm scripts
-└── .github/workflows/playwright.yml       # CI/CD: run tests, Allure report, email
+└── README.md                              # Project documentation
 ```
 
 ---
@@ -70,148 +73,113 @@ playwrightskill/
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  TEST SPEC (tests/regression/*.spec.js)             │
+│  TEST SPEC (tests/student/student.spec.js)          │
 │  - Uses custom fixture to get `actions` object      │
 │  - Calls action methods, never raw Playwright APIs  │
-│  - Each test is independent (no shared state)       │
+│  - Each test is independent
 └──────────────────────┬──────────────────────────────┘
                        │ calls
 ┌──────────────────────▼──────────────────────────────┐
-│  ACTION CLASS (actions/*.js)                        │
+│  ACTION CLASS (actions/StudentLMSActions.js)        │
 │  - Constructor takes `page`                         │
 │  - Contains business logic, clicks, fills, asserts  │
 │  - Imports locators from page objects               │
 └──────────────────────┬──────────────────────────────┘
                        │ uses
 ┌──────────────────────▼──────────────────────────────┐
-│  PAGE OBJECT (pages/*.js)                           │
+│  PAGE OBJECT (pages/StudentLMSPage.js)              │
 │  - Plain object with locator functions              │
-│  - getElement: (page) => page.locator("selector")   │
 │  - NO logic, NO assertions, NO interactions         │
 └─────────────────────────────────────────────────────┘
 ```
 
 ### Why this matters:
-- **UI changes?** Update only `pages/*.js` — actions and tests stay untouched
-- **Flow changes?** Update only `actions/*.js` — tests stay untouched
-- **New test scenario?** Add only a new `tests/regression/*.spec.js` — reuse existing actions
+
+- **UI changes?** Update only `pages/StudentLMSPage.js` — actions and specs stay untouched
+- **Flow changes?** Update only `actions/StudentLMSActions.js` — specs stay untouched
+- **New test scenario?** Add only a new spec in `tests/student/` and reuse existing actions
 
 ---
 
 ## How Authentication Works
 
-```
-1. auth.setup.js (globalSetup) runs ONCE before all tests
-2. Logs into OrangeHRM with credentials from .env
-3. Saves browser session to .auth/state.json
-4. All tests load this saved session automatically (playwright.config.js → storageState)
-5. Each test's beforeEach calls ensureLoggedIn() which:
-   - Navigates to the app
-   - If session expired → re-logs in automatically
-   - If session valid → proceeds directly to dashboard
-```
+This project uses `.env` to configure URLs and credentials. The workflow is:
+
+1. `auth.setup.js` runs before tests to establish the LMS session
+2. It saves browser state to `.auth/state.json`
+3. `playwright.config.js` loads that state as `storageState`
+4. Tests run with the saved authenticated session unless re-login is required
+
+Note: current target login page is `https://education.elearning23.com/login/index.php`
 
 ---
 
 ## How to Run Tests
 
-| Command | What it does |
-|---------|-------------|
-| `npm run test` | Run all 16 tests serially (1 worker) |
-| `npm run test:serial` | Same as above — serial mode |
-| `npm run test:parallel` | Run all 16 tests with 4 workers |
-| `npm run smoke` | Run only `@smoke` tagged tests |
-| `npm run regression` | Run only `@regression` tagged tests |
+| Command                 | What it does                                |
+| ----------------------- | ------------------------------------------- |
+| `npm run test`          | Run Playwright tests in default serial mode |
+| `npm run test:serial`   | Run tests serially                          |
+| `npm run test:parallel` | Run tests in parallel mode                  |
+| `npm run smoke`         | Run smoke-tagged tests                      |
+| `npm run regression`    | Run regression-tagged tests                 |
 
 ---
 
 ## How Claude Code Skills Work
 
-Skills are stored in `.claude/skills/<name>/SKILL.md`. Each skill has:
-- **YAML frontmatter** — name, description, permissions, invocability
-- **Markdown body** — instructions Claude follows when the skill is invoked
+Skills live in `.claude/skills/<name>/SKILL.md` and are invoked by the AI assistant to perform repository tasks.
 
 ### Available Skills
 
-| Skill | Invoke | What it does |
-|-------|--------|-------------|
-| **run-tests** | `/run-tests` | Runs the full test suite (serial or parallel), reports results |
-| **self-heal** | `/self-heal` | Reads test failures, identifies broken locators, fixes them in page objects, re-runs to verify |
-| **add-test** | `/add-test` | Creates a new test spec file following the POM template |
-| **add-page** | `/add-page` | Creates or updates a page object with new locators |
-| **add-action** | `/add-action` | Creates or updates an action class, registers it in the fixture |
-| **project-reference** | (auto) | Full codebase map — auto-loaded by Claude, not user-invocable |
-| **how-it-works** | `/how-it-works` | This guide — explains the entire project |
+| Skill                 | Invoke            | Purpose                                           |
+| --------------------- | ----------------- | ------------------------------------------------- |
+| **run-tests**         | `/run-tests`      | Run the test suite                                |
+| **self-heal**         | `/self-heal`      | Fix broken locators and re-run failures           |
+| **add-test**          | `/add-test`       | Create new spec files                             |
+| **add-page**          | `/add-page`       | Create/update page objects                        |
+| **add-action**        | `/add-action`     | Create/update action classes                      |
+| **add-comments**      | `/add-comments`   | Add JSDoc to action methods and test specs        |
+| **proctoring**        | `/proctoring`     | Author/update Proctoring Pro TCs and Y4M fixtures |
+| **setup-env**         | `/setup-env`      | First-time project setup: env, deps, base image  |
+| **codebase-rules**    | (auto)            | Authoritative rules for all skill generators      |
+| **project-reference** | (auto)            | Load the codebase map                             |
+| **how-it-works**      | `/how-it-works`   | Explain the repository                            |
 
-### How skills connect:
+### Playwright MCP server
 
-```
-User says "run tests"
-  → /run-tests executes npm run test:serial
-    → Tests fail?
-      → /self-heal reads errors
-        → Locator broken? → Updates pages/*.js
-        → Flow changed? → Updates actions/*.js
-        → Re-runs failing tests to verify fix
-
-User says "add a test for X"
-  → /add-test creates tests/regression/xTests.spec.js
-    → Needs new locator? → /add-page creates/updates pages/XPage.js
-    → Needs new action? → /add-action creates/updates actions/XActions.js
-      → Registers new action in tests/fixture/customfixture.js
-```
-
-### Scheduled automation:
-- Every day at **12:00 PM**: `/run-tests` runs automatically
-- If any test fails: `/self-heal` kicks in to fix broken locators
-
----
-
-## How CI/CD Works
-
-`.github/workflows/playwright.yml` triggers on:
-- Push to `main`
-- Pull request to `main`
-- Daily schedule at 18:15 UTC
-
-**Pipeline steps:**
-1. Checkout repo
-2. Setup Node.js 18
-3. Install dependencies (`npm ci`)
-4. Install Playwright browsers
-5. Run tests (`npx playwright test`)
-6. Generate Allure single-file HTML report
-7. Email report to `nassirctg1234@gmail.com` via Gmail SMTP
-8. Fail workflow if tests failed
-
-**Required GitHub Secrets:** `EMAIL_USERNAME`, `EMAIL_PASSWORD`
+This repo includes `.mcp.json`, so the assistant can use Playwright MCP capabilities to inspect browser DOM and locate elements during debug or self-heal actions.
 
 ---
 
 ## Key Files Reference
 
 ### Config Files
-| File | What it controls |
-|------|-----------------|
-| `.env` | `BASE_URL`, `USER2_EMAIL`, `USER2_PASSWORD`, `AUTH_STATE_PATH` |
-| `config/env.config.js` | Loads `.env` into a `config` object used by all tests |
-| `playwright.config.js` | Browser (Chrome), reporter (Allure), timeout (80s), workers, globalSetup |
-| `auth.setup.js` | One-time login before all tests, saves session to `.auth/state.json` |
+
+| File                   | What it controls                                           |
+| ---------------------- | ---------------------------------------------------------- |
+| `.env`                 | LMS URL, credentials, auth storage, camera mode            |
+| `.env.example`         | Template for environment variables                         |
+| `config/env.config.js` | Loads `.env` into a shared `config` object                 |
+| `playwright.config.js` | Browser launch options, reporters, timeouts, storage state |
+| `auth.setup.js`        | Global setup for login and session persistence             |
+
+### Proctoring fixture files
+
+- `data/fixtures/face/baseline.jpg` — reference image for face-match tests
+- `data/fixtures/face/generate-y4m.sh` — converts JPEGs into Chromium fake-video `.y4m`
+- `excel/Proctoring Pro.xlsx` — source test case matrix
+- `excel/results/` — generated result exports after test runs
 
 ### Custom Fixture
-`tests/fixture/customfixture.js` injects these into every test:
-```javascript
-actions.login        // LoginActions
-actions.dashboard    // DashboardActions
-actions.profile      // ProfileActions
-actions.navigation   // NavigationActions
-```
 
-### Dependencies
-| Package | Purpose |
-|---------|---------|
-| `@playwright/test` | Test framework and runner |
-| `allure-playwright` | Allure test reporting |
-| `dotenv` | Environment variable loading |
-| `xlsx` | Excel file support (data-driven ready) |
-| `@cucumber/cucumber` | BDD support (installed, not yet wired) |
+`tests/fixture/customfixture.js` injects action helpers into every test.
+
+---
+
+## Important Notes
+
+- This repository is focused on **LMS proctoring automation**, not ecommerce.
+- The current site under test is `https://education.elearning23.com/login/index.php`.
+- The proctoring flow depends on camera fixture generation and a baseline face image.
+- Use `.env` values for URLs and credentials instead of hardcoding site URLs.

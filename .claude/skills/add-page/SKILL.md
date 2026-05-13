@@ -32,10 +32,7 @@ module.exports = PageName;
 
 ## Existing Page Objects
 
-- `pages/LoginPage.js` — Login form elements, error messages
-- `pages/DashboardPage.js` — Dashboard heading, Quick Launch, widgets
-- `pages/ProfilePage.js` — User dropdown menu items
-- `pages/SidebarPage.js` — Sidebar navigation, menu items, search
+- `pages/StudentLMSPage.js` — Full LMS locator set: login form, dashboard nav, quiz attempt, Proctoring Pro modal (validate face, face match/mismatch, camera errors, suspicious activity banners, start/finish attempt buttons)
 
 ## After Creating
 

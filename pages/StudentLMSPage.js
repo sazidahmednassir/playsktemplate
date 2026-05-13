@@ -120,6 +120,12 @@ const StudentLMSPage = {
       .first(),
   getQuizSubmissionConfirm: (page) =>
     page.getByRole("dialog").filter({ hasText: /submit/i }).getByRole("button", { name: /submit/i }).first(),
+
+  // ---------- TC-7: Logout ----------
+  getUserMenuBtn: (page) =>
+    page.getByRole("button", { name: /sazid|student/i }).first(),
+  getLogoutLink: (page) =>
+    page.getByRole("link", { name: /log\s*out/i }),
 };
 
 module.exports = StudentLMSPage;

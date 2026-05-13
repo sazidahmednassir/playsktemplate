@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "pretest": "rm -f excel/results/*.xlsx",
     "test": "npx playwright test",
     "test:parallel": "PARALLEL=true npx playwright test",
     "test:serial": "npx playwright test",
