@@ -1,11 +1,9 @@
 // Custom Playwright fixture — injects an `actions` namespace into every test.
 // Per CLAUDE.md: every test MUST `require("../fixture/customfixture")`.
 //
-// NOTE: The original CLAUDE.md references LoginActions / DashboardActions /
-// ProfileActions / NavigationActions for OrangeHRM. Their action files do not
-// yet exist in the repo. They are reintroduced here as graceful require()s so
-// the fixture works today (LMS tests) and lights up automatically once those
-// action classes are created.
+// Action classes are loaded via safeRequire() so this fixture works on a fresh
+// codebase. As you create new action files under `actions/`, register them
+// below and they'll be available on the `actions` fixture in every spec.
 
 const { test: base } = require("@playwright/test");
 
@@ -18,24 +16,13 @@ function safeRequire(modPath) {
   }
 }
 
-const LoginActions = safeRequire("../../actions/LoginActions");
-const DashboardActions = safeRequire("../../actions/DashboardActions");
-const ProfileActions = safeRequire("../../actions/ProfileActions");
-const NavigationActions = safeRequire("../../actions/NavigationActions");
-const StudentLMSActions = safeRequire("../../actions/StudentLMSActions");
-const AdminActions = safeRequire("../../actions/AdminActions");
-const TeacherActions = safeRequire("../../actions/TeacherActions");
+// Register action classes here as you add them.
+// Example: const LoginActions = safeRequire("../../actions/LoginActions");
 
 exports.test = base.extend({
   actions: async ({ page }, use) => {
     const actions = {};
-    if (LoginActions) actions.login = new LoginActions(page);
-    if (DashboardActions) actions.dashboard = new DashboardActions(page);
-    if (ProfileActions) actions.profile = new ProfileActions(page);
-    if (NavigationActions) actions.navigation = new NavigationActions(page);
-    if (StudentLMSActions) actions.studentLms = new StudentLMSActions(page);
-    if (AdminActions) actions.admin = new AdminActions(page);
-    if (TeacherActions) actions.teacher = new TeacherActions(page);
+    // Example: if (LoginActions) actions.login = new LoginActions(page);
     await use(actions);
   },
 });
