@@ -18,7 +18,8 @@
       "Edit(/.claude/skills/proctoring/**)",
       "Skill(setup-env)",
       "Skill(setup-env:*)",
-      "mcp__playwright__browser_fill_form"
+      "mcp__playwright__browser_fill_form",
+      "Bash(node -e ' *)"
     ]
   }
 }

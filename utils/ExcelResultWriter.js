@@ -61,17 +61,53 @@ class ExcelResultWriter {
     if (!fs.existsSync(this.outPath)) {
       fs.copyFileSync(SOURCE, this.outPath);
     }
+
+    // Snapshot column G from the SOURCE workbook so write() can tell
+    // "the cell still holds the workbook's baseline text" (→ overwrite)
+    // apart from "a sibling-leg worker already wrote here this run" (→ merge).
+    // Needed because each Playwright project runs in its own worker process,
+    // so an in-memory _written Set would not see sibling-leg writes.
+    this._sourceActuals = this._snapshotSourceActuals();
+  }
+
+  _snapshotSourceActuals() {
+    const wb = XLSX.readFile(SOURCE);
+    const snap = {};
+    for (const sheetName of wb.SheetNames) {
+      const ws = wb.Sheets[sheetName];
+      if (!ws || !ws["!ref"]) continue;
+      const range = XLSX.utils.decode_range(ws["!ref"]);
+      const idCol = COLUMNS.ID - 1;
+      const actualCol = COLUMNS.ACTUAL - 1;
+      for (let r = range.s.r + 1; r <= range.e.r; r++) {
+        const idCell = ws[XLSX.utils.encode_cell({ r, c: idCol })];
+        if (!idCell) continue;
+        const actualCell = ws[XLSX.utils.encode_cell({ r, c: actualCol })];
+        snap[`${sheetName}:${String(idCell.v).trim()}`] = actualCell
+          ? String(actualCell.v ?? "")
+          : "";
+      }
+    }
+    return snap;
   }
 
   /**
    * Write Actual Result for a single test row.
    *
+   * The cell receives `detail` verbatim — the spec owns the full text (no
+   * `[STATUS] timestamp` is auto-prepended). When `write()` is called twice
+   * for the same (sheet, tcId) within a run (e.g. TC-5 leg A + leg B), the
+   * new snippet is appended to the existing cell value with a single space,
+   * so both legs end up in one row.
+   *
    * @param {Object} opts
    * @param {string} opts.sheet    Worksheet/tab name (e.g. "Student").
    * @param {string|number} opts.tcId  Value in the ID column (matches as string).
-   * @param {"PASS"|"FAIL"|"SKIP"|"BLOCKED"} opts.status
-   * @param {string} [opts.detail] Free-text outcome — error message, popup
-   *                               text, screenshot path, etc.
+   * @param {"PASS"|"FAIL"|"SKIP"|"BLOCKED"} opts.status  Logged only; not embedded in the cell.
+   * @param {string} [opts.detail] Cell text. For PASS this should be a
+   *                               past-tense restatement of Expected Result.
+   *                               For FAIL/SKIP, lead with the status word
+   *                               and include diagnostic info.
    */
   write({ sheet, tcId, status, detail = "" }) {
     const wb = XLSX.readFile(this.outPath, { cellStyles: true });
@@ -95,12 +131,21 @@ class ExcelResultWriter {
       throw new Error(`TC ID "${tcId}" not found in sheet "${sheet}"`);
     }
 
-    const stamp = new Date().toISOString();
-    const text =
-      `[${status}] ${stamp}\n` + (detail ? `\n${detail}\n` : "");
-
     const addr = XLSX.utils.encode_cell({ r: targetRow, c: actualCol });
-    ws[addr] = { t: "s", v: text };
+    const key = `${sheet}:${String(tcId).trim()}`;
+    const onDisk = String(ws[addr]?.v ?? "");
+    const baseline = this._sourceActuals[key] ?? "";
+    // If on-disk text still matches the source workbook, this is the first
+    // write for this TC in the run → overwrite. Otherwise a sibling-leg
+    // worker has already written → append our snippet (idempotent).
+    const isFirstWrite = onDisk === baseline;
+    const merged = isFirstWrite
+      ? detail
+      : onDisk.includes(detail)
+        ? onDisk
+        : `${onDisk} ${detail}`.trim();
+
+    ws[addr] = { t: "s", v: merged };
 
     // Expand !ref if we wrote past the previous bounds (we shouldn't).
     if (targetRow > range.e.r || actualCol > range.e.c) {

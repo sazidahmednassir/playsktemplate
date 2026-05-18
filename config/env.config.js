@@ -25,6 +25,14 @@ const config = {
       email: process.env.LMS_STUDENT_EMAIL,
       password: process.env.LMS_STUDENT_PASSWORD,
     },
+    admin: {
+      username: process.env.LMS_ADMIN_USERNAME,
+      password: process.env.LMS_ADMIN_PASSWORD,
+    },
+    teacher: {
+      username: process.env.LMS_TEACHER_USERNAME,
+      password: process.env.LMS_TEACHER_PASSWORD,
+    },
     course: process.env.LMS_COURSE_NAME || "Computational Problem Solving",
     quizName: process.env.LMS_QUIZ_NAME || "Test Quiz",
     faceFixtures,

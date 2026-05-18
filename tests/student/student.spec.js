@@ -20,16 +20,44 @@ const STUDENT_AUTH_FILE = path.resolve(__dirname, "../../.auth/student.json");
 //   @noFace            → TC-5a
 //   @multiFace         → TC-5b
 
-// Title → Excel row mapping. Both legs of TC-5 write to row 5.
+// Title → Excel row mapping. Both legs of TC-5 write to row 5; the writer
+// merges them into one cell. `passDetail` is the past-tense restatement of
+// the Excel Expected Result (column F) — the writer drops it into column G
+// verbatim on PASS, so the actual result reads as plain English instead of
+// a `[PASS] timestamp + duration` dump.
 const TC_BY_TITLE = {
-  "TC-1 Face validation on quiz start shows 'Face matched' @baseline": { sheet: "Student", tcId: 1 },
-  "TC-2 Face mismatch on quiz start shows 'Face not matched' @mismatch": { sheet: "Student", tcId: 2 },
-  "TC-3 Camera permission denied shows a camera-blocked error @permissionDenied": { sheet: "Student", tcId: 3 },
-  "TC-4 No camera device available shows a camera-not-detected error @noCamera": { sheet: "Student", tcId: 4 },
-  "TC-5a Suspicious activity (no face) shows a warning @noFace": { sheet: "Student", tcId: 5, legLabel: "Leg A: No Face" },
-  "TC-5b Suspicious activity (multiple faces) shows a warning @multiFace": { sheet: "Student", tcId: 5, legLabel: "Leg B: Multi Face" },
-  "TC-6 Full proctoring flow — face match, start attempt, submit @baseline": { sheet: "Student", tcId: 6 },
-  "TC-7 Student logs out and is redirected to homepage @logout": { sheet: "Student", tcId: 7 },
+  "TC-1 Face validation on quiz start shows 'Face matched' @baseline": {
+    sheet: "Student", tcId: 1,
+    passDetail: 'Face validation popup showed "Face Validation: Face matched."',
+  },
+  "TC-2 Face mismatch on quiz start shows 'Face not matched' @mismatch": {
+    sheet: "Student", tcId: 2,
+    passDetail: 'Popup showed "Face Validation: Face not matched." (or equivalent rejection message). Validate Face button did NOT advance to Start Attempt.',
+  },
+  "TC-3 Camera permission denied shows a camera-blocked error @permissionDenied": {
+    sheet: "Student", tcId: 3,
+    passDetail: 'A camera-permission / "Allow camera access" error message was visible. The student could not proceed to Start Attempt.',
+  },
+  "TC-4 No camera device available shows a camera-not-detected error @noCamera": {
+    sheet: "Student", tcId: 4,
+    passDetail: 'A "No camera detected" or equivalent error was shown. The Validate Face flow did not proceed.',
+  },
+  "TC-5a Suspicious activity (no face) shows a warning @noFace": {
+    sheet: "Student", tcId: 5, legLabel: "Leg A: No Face",
+    passDetail: 'Leg A: "No face detected" warning was visible.',
+  },
+  "TC-5b Suspicious activity (multiple faces) shows a warning @multiFace": {
+    sheet: "Student", tcId: 5, legLabel: "Leg B: Multi Face",
+    passDetail: 'Leg B: "Multiple faces detected" warning OR a suspicious-activity banner was visible.',
+  },
+  "TC-6 Full proctoring flow — face match, start attempt, submit @baseline": {
+    sheet: "Student", tcId: 6,
+    passDetail: "Quiz transitioned through validation → attempt → review/summary without errors. Webcam preview remained visible while the quiz was open.",
+  },
+  "TC-7 Student logs out and is redirected to homepage @logout": {
+    sheet: "Student", tcId: 7,
+    passDetail: "User saw the homepage after logout (https://education.elearning23.com/).",
+  },
 };
 
 test.describe("Student | Proctoring Pro", () => {
@@ -47,23 +75,21 @@ test.describe("Student | Proctoring Pro", () => {
           ? "SKIP"
           : "FAIL";
 
-    const detailParts = [];
-    if (testInfo.error?.message) detailParts.push(`Error: ${testInfo.error.message}`);
-    if (testInfo.errors?.length > 1) {
-      detailParts.push(
-        `Additional errors: ${testInfo.errors
-          .slice(1)
-          .map((e) => e.message)
-          .join(" | ")}`,
-      );
+    let detail;
+    if (status === "PASS") {
+      // Plain past-tense restatement of the Expected Result. The writer
+      // merges sibling-leg writes (e.g. TC-5 leg A + leg B) into one cell.
+      detail = meta.passDetail || "Test passed.";
+    } else if (status === "SKIP") {
+      detail = "SKIPPED";
+    } else {
+      const parts = ["FAIL"];
+      if (meta.legLabel) parts.push(`[${meta.legLabel}]`);
+      if (testInfo.error?.message) parts.push(`— ${testInfo.error.message}`);
+      const screenshot = testInfo.attachments.find((a) => a.name === "screenshot");
+      if (screenshot?.path) parts.push(`Screenshot: ${screenshot.path}`);
+      detail = parts.join(" ");
     }
-    const screenshot = testInfo.attachments.find((a) => a.name === "screenshot");
-    if (screenshot?.path) detailParts.push(`Screenshot: ${screenshot.path}`);
-    detailParts.push(`Duration: ${testInfo.duration} ms`);
-
-    const detail = meta.legLabel
-      ? `[${meta.legLabel}] ${detailParts.join("\n")}`
-      : detailParts.join("\n");
 
     try {
       const out = getWriter().write({

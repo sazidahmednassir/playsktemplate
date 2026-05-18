@@ -23,6 +23,8 @@ const DashboardActions = safeRequire("../../actions/DashboardActions");
 const ProfileActions = safeRequire("../../actions/ProfileActions");
 const NavigationActions = safeRequire("../../actions/NavigationActions");
 const StudentLMSActions = safeRequire("../../actions/StudentLMSActions");
+const AdminActions = safeRequire("../../actions/AdminActions");
+const TeacherActions = safeRequire("../../actions/TeacherActions");
 
 exports.test = base.extend({
   actions: async ({ page }, use) => {
@@ -32,6 +34,8 @@ exports.test = base.extend({
     if (ProfileActions) actions.profile = new ProfileActions(page);
     if (NavigationActions) actions.navigation = new NavigationActions(page);
     if (StudentLMSActions) actions.studentLms = new StudentLMSActions(page);
+    if (AdminActions) actions.admin = new AdminActions(page);
+    if (TeacherActions) actions.teacher = new TeacherActions(page);
     await use(actions);
   },
 });

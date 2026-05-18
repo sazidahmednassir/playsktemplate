@@ -25,7 +25,11 @@ const fakeMediaArgs = (videoFile) =>
         `--use-file-for-fake-video-capture=${videoFile}`,
       ];
 
-const studentTagPattern = /@(baseline|mismatch|permissionDenied|noCamera|noFace|multiFace|logout)\b/;
+// Every tag that has its own dedicated project. The default "Google Chrome"
+// project uses this as `grepInvert` so each tag runs in exactly one place.
+// Admin runs with an empty storage state (explicit login is the TC under
+// test), so it needs its own project rather than the shared session.
+const tagsHandledByDedicatedProjects = /@(baseline|mismatch|permissionDenied|noCamera|noFace|multiFace|logout|admin|teacher)\b/;
 
 module.exports = defineConfig({
   testDir: "./tests",
@@ -62,14 +66,44 @@ module.exports = defineConfig({
   },
 
   projects: [
-    // Default browser project for non-student tests. Skips any student-tagged test.
+    // Default browser project for non-student / non-admin tests. Skips any
+    // tag that has its own dedicated project so each tag runs in exactly one
+    // place.
     {
       name: "Google Chrome",
-      grepInvert: studentTagPattern,
+      grepInvert: tagsHandledByDedicatedProjects,
       use: {
         viewport: null,
         launchOptions: {
           args: ["--start-maximized", ...fakeMediaArgs(config.lms.faceFixtures.baseline)],
+        },
+      },
+    },
+
+    // Admin | Proctoring Pro — empty storage state forces an explicit login.
+    {
+      name: "admin-login",
+      grep: /@admin\b/,
+      use: {
+        viewport: null,
+        storageState: { cookies: [], origins: [] },
+        baseURL: config.lms.baseURL,
+        launchOptions: {
+          args: ["--start-maximized"],
+        },
+      },
+    },
+
+    // Teacher | Proctoring Pro — empty storage state forces an explicit login.
+    {
+      name: "teacher-login",
+      grep: /@teacher\b/,
+      use: {
+        viewport: null,
+        storageState: { cookies: [], origins: [] },
+        baseURL: config.lms.baseURL,
+        launchOptions: {
+          args: ["--start-maximized"],
         },
       },
     },

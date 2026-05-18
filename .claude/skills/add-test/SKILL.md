@@ -56,8 +56,30 @@ actions.studentLms   // StudentLMSActions — login, navigate quiz, face validat
 
 ## TC_BY_TITLE Registration (required for Excel writer)
 
+Every entry MUST include `passDetail` — a **past-tense restatement of the
+Excel Expected Result (column F)**. The writer drops it verbatim into column
+G on PASS (no `[STATUS] timestamp` prefix, no duration noise), so the actual
+result reads as plain English.
+
 ```javascript
 const TC_BY_TITLE = {
-  "TC-N Test title @tag": { sheet: "Student", tcId: N },
+  "TC-N Test title @tag": {
+    sheet: "Student",
+    tcId: N,
+    passDetail: "Past-tense restatement of the Expected Result.",
+    // Optional: legLabel for multi-leg TCs that share one Excel row.
+    // legLabel: "Leg A: ...",
+  },
 };
 ```
+
+Rules for `passDetail`:
+
+- Mirror the Expected Result, but rewrite verbs to past tense (`is visible`
+  → `was visible`, `shows` → `showed`, `proceeds` → `proceeded`).
+- One sentence per expectation; preserve any quoted UI strings exactly.
+- For multi-leg TCs (e.g. TC-5 leg A + leg B), give each leg its own
+  `passDetail` snippet — the writer merges sibling-leg writes into one cell.
+- On FAIL the spec writes `FAIL — <error>` automatically; on SKIP it writes
+  `SKIPPED`. Both are handled by the shared `afterEach` — do not bake them
+  into `passDetail`.

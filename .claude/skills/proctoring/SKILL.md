@@ -135,11 +135,29 @@ holds one row per TC:
 \* Actual Result is overwritten by `utils/ExcelResultWriter.js` after each test
 runs — a timestamped copy lands in `excel/results/`.
 
+### Actual Result format (column G)
+
+The writer drops `detail` verbatim into column G — no `[STATUS] timestamp`
+prefix, no duration line. On PASS, write a **past-tense restatement** of the
+Expected Result so the cell reads like plain English. Example:
+
+| Expected (col F) | Actual on PASS (col G) |
+| --- | --- |
+| `Leg A: "No face detected" warning is visible.` `Leg B: "Multiple faces detected" warning OR a suspicious-activity banner is visible.` | `Leg A: "No face detected" warning was visible. Leg B: "Multiple faces detected" warning OR a suspicious-activity banner was visible.` |
+
+On FAIL, the spec writes `FAIL — <error>` (plus optional `[Leg X]` /
+screenshot path). On SKIP, the spec writes `SKIPPED`.
+
+For multi-leg TCs (e.g. TC-5), each leg writes its own snippet; the writer
+merges sibling-leg writes into a single cell within the same run.
+
 When you add a new TC, also add it to:
 
 1. `tests/student/student.spec.js` (a new `test(...)` plus an entry in
    `TC_BY_TITLE`).
-2. The `TC_BY_TITLE` map — the title MUST match the `test()` title exactly.
+2. The `TC_BY_TITLE` map — the title MUST match the `test()` title exactly,
+   and the entry MUST include a `passDetail` string (past-tense restatement
+   of column F).
 
 ## Rules
 
