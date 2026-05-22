@@ -17,7 +17,7 @@ tests/    -> Specs using custom fixture
 
 ## Target Application
 
-- **App**: eLearning23 LMS (Moodle) — `https://education.elearning23.com/`
+- **App**: LMS (Moodle-based) — configured via `LMS_BASE_URL` in `.env`
 - **Plugin under test**: Proctoring Pro (face validation on quiz attempts)
 - **Credentials**: loaded from `.env` via `config/env.config.js`
 

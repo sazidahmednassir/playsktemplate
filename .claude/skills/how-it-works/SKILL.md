@@ -8,9 +8,9 @@ user-invocable: true
 
 ## What Is This?
 
-A **Playwright E2E automation framework** for the **eLearning23 LMS** proctoring application, not OrangeHRM. This repo targets the Moodle-based site at:
+A **Playwright E2E automation framework** for an **LMS proctoring** application. This repo targets a Moodle-based learning management system configured via environment variables.
 
-`https://education.elearning23.com/login/index.php`
+See `.env.example` for setup instructions.
 
 It is an LMS/proctoring automation project with special handling for camera validation, face matching, and fake webcam fixtures.
 
@@ -110,7 +110,7 @@ This project uses `.env` to configure URLs and credentials. The workflow is:
 3. `playwright.config.js` loads that state as `storageState`
 4. Tests run with the saved authenticated session unless re-login is required
 
-Note: current target login page is `https://education.elearning23.com/login/index.php`
+Note: current target login page is configured in `.env` as `BASE_URL`
 
 ---
 
@@ -180,6 +180,6 @@ This repo includes `.mcp.json`, so the assistant can use Playwright MCP capabili
 ## Important Notes
 
 - This repository is focused on **LMS proctoring automation**, not ecommerce.
-- The current site under test is `https://education.elearning23.com/login/index.php`.
+- The current site under test is configured via `BASE_URL` environment variable in `.env`.
 - The proctoring flow depends on camera fixture generation and a baseline face image.
 - Use `.env` values for URLs and credentials instead of hardcoding site URLs.

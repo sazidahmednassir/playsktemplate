@@ -20,7 +20,7 @@ camera setup, and the conventions every TC must follow.
 
 ## Target system
 
-- App: Moodle on `https://education.elearning23.com/`
+- App: Moodle-based LMS (URL configured via `LMS_BASE_URL` in `.env`)
 - Plugin: **Proctoring Pro** (block on quiz attempt page).
 - Validate Face button: `#fcvalidate`.
 - Match popup text: `Face Validation: Face matched.`

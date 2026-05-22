@@ -35,7 +35,7 @@ Record the project type. It determines which challenge flags to surface in Step 
 Ask:
 > "What is the login URL of the site under test?"
 
-Example answer: `https://education.elearning23.com/login/index.php`
+Example answer: `https://your-lms-site.com/login/index.php`
 
 Write this as `BASE_URL` in `.env`. If the project also has a module-specific base URL (e.g. LMS student portal is a sub-path), ask for that too and write it as the appropriate variable (e.g. `LMS_BASE_URL`).
 
@@ -111,11 +111,11 @@ Fill in values collected in Step 0:
 
 | Variable | Description | Example |
 |---|---|---|
-| `BASE_URL` | Full login URL of the target app | `https://education.elearning23.com/login/index.php` |
+| `BASE_URL` | Full login URL of the target app | `https://your-lms-site.com/login/index.php` |
 | `USER2_EMAIL` | Primary test user email | `user@example.com` |
 | `USER2_PASSWORD` | Primary test user password | `Admin@123` |
 | `AUTH_STATE_PATH` | Path to save browser session | `.auth/state.json` |
-| `LMS_BASE_URL` | LMS root URL (LMS projects only) | `https://education.elearning23.com/` |
+| `LMS_BASE_URL` | LMS root URL (LMS projects only) | `https://your-lms-site.com/` |
 | `LMS_STUDENT_EMAIL` | Student account email | `student@example.com` |
 | `LMS_STUDENT_PASSWORD` | Student account password | `Student@123` |
 | `LMS_COURSE_NAME` | Course name under test | `Computational Problem Solving` |
