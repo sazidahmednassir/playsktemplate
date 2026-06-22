@@ -7,7 +7,7 @@ allowed-tools: Bash(npx playwright*) Bash(npm run test*) Read
 
 # Run Tests
 
-Run the Playwright E2E test suite against the eLearning23 LMS (Proctoring Pro).
+Run the Playwright E2E test suite against the Sikder Store admin/storefront and emit the report (`reports/<run>/report.md` + `report.docx`). Run `node utils/generateReport.js` for the curated `docs/Test-Report.*` deliverable.
 
 ## Two Modes
 

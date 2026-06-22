@@ -16,3 +16,9 @@ node_modules/
 
 # Generated camera-feed Y4M files (regenerable via data/fixtures/face/generate-y4m.sh)
 data/fixtures/face/*.y4m
+reports/
+.auth/
+_explore/
+test-results/
+allure-results/
+playwright-report/

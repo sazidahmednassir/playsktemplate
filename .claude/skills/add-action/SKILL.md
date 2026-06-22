@@ -46,14 +46,14 @@ module.exports = NewActions;
 1. **Register in fixture** — add the new action to `tests/fixture/customfixture.js`:
 
 ```javascript
-const NewActions = require("../../actions/NewActions");
+const NewActions = safeRequire("../../actions/NewActions");
 
 exports.test = base.extend({
   actions: async ({ page }, use) => {
-    const actions = {
-      studentLms: new StudentLMSActions(page),
-      newAction: new NewActions(page),  // <-- add here
-    };
+    const actions = {};
+    if (AdminAuthActions) actions.auth = new AdminAuthActions(page);
+    // ... existing registrations ...
+    if (NewActions) actions.newAction = new NewActions(page);  // <-- add here
     await use(actions);
   },
 });
@@ -63,4 +63,8 @@ exports.test = base.extend({
 
 ## Existing Actions
 
-- `actions/StudentLMSActions.js` — Full Proctoring Pro flow: login, navigate to quiz, face validation, camera checks, suspicious activity, start/finish attempt
+- `actions/AdminAuthActions.js` — staff login (`loginAsOwner`, `loginAsAdminUser`, `attemptLogin`)
+- `actions/OrderActions.js` — list/find/open orders, status, `hasReturnAction`, logs
+- `actions/ReturnActions.js` — dashboard summary, `createRequest`, `openReturn`, `getDetailFacts`, `settle`, `reject`
+- `actions/InventoryActions.js` — stock `snapshot`, `availableFor`
+- `actions/StoreFrontActions.js` — storefront reachability + cart

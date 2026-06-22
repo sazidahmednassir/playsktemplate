@@ -1,9 +1,8 @@
 // Custom Playwright fixture — injects an `actions` namespace into every test.
 // Per CLAUDE.md: every test MUST `require("../fixture/customfixture")`.
 //
-// Action classes are loaded via safeRequire() so this fixture works on a fresh
-// codebase. As you create new action files under `actions/`, register them
-// below and they'll be available on the `actions` fixture in every spec.
+// Action classes are loaded via safeRequire() so this fixture works even on a
+// partially-built tree. Register new action classes below as you add them.
 
 const { test: base } = require("@playwright/test");
 
@@ -16,13 +15,20 @@ function safeRequire(modPath) {
   }
 }
 
-// Register action classes here as you add them.
-// Example: const LoginActions = safeRequire("../../actions/LoginActions");
+const AdminAuthActions = safeRequire("../../actions/AdminAuthActions");
+const OrderActions = safeRequire("../../actions/OrderActions");
+const ReturnActions = safeRequire("../../actions/ReturnActions");
+const InventoryActions = safeRequire("../../actions/InventoryActions");
+const StoreFrontActions = safeRequire("../../actions/StoreFrontActions");
 
 exports.test = base.extend({
   actions: async ({ page }, use) => {
     const actions = {};
-    // Example: if (LoginActions) actions.login = new LoginActions(page);
+    if (AdminAuthActions) actions.auth = new AdminAuthActions(page);
+    if (OrderActions) actions.orders = new OrderActions(page);
+    if (ReturnActions) actions.returns = new ReturnActions(page);
+    if (InventoryActions) actions.inventory = new InventoryActions(page);
+    if (StoreFrontActions) actions.store = new StoreFrontActions(page);
     await use(actions);
   },
 });

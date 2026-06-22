@@ -1,6 +1,6 @@
 ---
 name: codebase-rules
-description: Authoritative codebase rules and spec file generation guidelines. Auto-loaded reference for all spec/page/action generators. Defines comment style, Excel-tab → spec-file mapping, folder structure, and the Student module test inventory.
+description: Authoritative codebase rules and spec file generation guidelines. Auto-loaded reference for all spec/page/action generators. Defines comment style, ticket-Area → spec-file mapping, folder structure, and the report-annotation contract.
 user-invocable: false
 allowed-tools: Read
 ---
@@ -22,12 +22,10 @@ Do **not** use block-style documentation comments inside:
 
 ```js
 /**
- * Precondition step: open login page and log in as a student.
+ * Precondition step: open the admin and log in as the store owner.
  * @param {string} baseURL
- * @param {string} email
- * @param {string} password
  */
-async loginStudent() {}
+async loginOwner() {}
 ```
 
 ### Allowed
@@ -37,87 +35,74 @@ async loginStudent() {}
 - Clear method naming conventions
 
 ```js
-async loginAsStudent(email, password) {}
+async loginAsOwner() {}
 ```
 
 > Exception: the `/add-comments` skill explicitly governs JSDoc on actions and TC headers on specs. Outside of that skill, do not add JSDoc blocks.
 
-## 2. Excel Tab → Spec File Mapping
+## 2. Ticket Area → Spec File Mapping
 
-All test cases under the same Excel tab must live in a **single** spec file, grouped by tab/module name.
+Test cases are derived from a **ticket** (`tickets/*.md`), grouped by **Area**. All TCs under the same Area live in a **single** spec file.
 
-| Excel Tab | Generated Spec File             |
-| --------- | ------------------------------- |
-| Student   | `tests/student/student.spec.js` |
-| Teacher   | `tests/teacher/teacher.spec.js` |
-| Quiz      | `tests/quiz/quiz.spec.js`       |
-| Course    | `tests/course/course.spec.js`   |
-| Admin     | `tests/admin/admin.spec.js`     |
+| Ticket Area | Generated Spec File             |
+| ----------- | ------------------------------- |
+| Order       | `tests/order/order.spec.js`     |
+| Return      | `tests/return/return.spec.js`   |
+| Exchange    | `tests/exchange/exchange.spec.js` |
+| Damage      | `tests/damage/damage.spec.js`   |
+| Inventory   | (assert inside the relevant flow spec, e.g. `return.spec.js`) |
+| Refund      | (assert inside `return.spec.js`) |
 
 Rules:
 
-- Read Excel tabs dynamically.
-- Create or update spec files based on tab names.
-- Append all related test cases into the same spec file.
+- Read ticket Areas from the ticket's Test-Case table.
+- Create or update spec files based on Area names.
+- Append all related test cases into the same Area spec file.
 - Never create a separate spec file per test case.
 
 ## 3. Folder Structure
 
 ```bash
+tickets/                # ticket context + Test-Case matrix (source of truth)
 tests/
- ├── student/
- │    └── student.spec.js
- ├── teacher/
- │    └── teacher.spec.js
- ├── quiz/
- │    └── quiz.spec.js
-pages/
-actions/
-utils/
+ ├── auth.setup.js      # staff login → .auth/*.json (storageState)
+ ├── order/   order.spec.js
+ ├── return/  return.spec.js
+ ├── exchange/ exchange.spec.js
+ └── damage/  damage.spec.js
+pages/                  # locators only
+actions/                # business logic
+utils/                  # ReportWriter, generateReport
+reports/<timestamp>/    # report.md + report.docx + evidence
 ```
 
 Each spec file must:
 
-- Contain module-specific test cases only
-- Reuse common actions/utilities
+- Contain Area-specific test cases only
+- Reuse common actions/utilities (the `actions` fixture)
 - Avoid duplicate helper methods
-- Follow tab-wise organization from Excel
+- Follow Area-wise organization from the ticket
 
-## 4. Student Module — Required Test Cases
+## 4. Layer Responsibilities
 
-Source: Proctoring Pro plugin workflow (https://proctoringformoodle.com/).
-
-All of the following must exist in `tests/student/student.spec.js`:
-
-1. Face validation on quiz start
-2. Face mismatch on quiz start
-3. Camera permission denied
-4. No camera device available
-5. Suspicious activity — no face / multiple faces
-6. Full proctoring flow (match → start → submit)
-
-Student module coverage areas:
-
-- Face validation
-- Suspicious activity detection
-- Camera permission validation
-- No-face detection
-- Multiple-face detection
+- **`pages/`** — locators / element getters only. No assertions, no flows.
+- **`actions/`** — reusable flows and step methods; call page getters; return data. No `expect`.
+- **spec files** — expectations (`expect`) and test flow; call action methods; annotate for the report.
 
 ## 5. Generator Contract
 
 Any automation that produces specs must:
 
-1. Read the Excel tab name.
+1. Read the ticket Area name.
 2. Resolve the target spec path from the table in §2.
 3. Append new test cases into that spec — never split.
 4. Reuse existing actions/pages; do not duplicate helpers.
 5. Follow the comment rules in §1.
+6. Register each TC's metadata via `testInfo.annotations` (`tcId`, `area`, `severity`, `priority`, `expected`, `steps`, `actual`) so `utils/ReportWriter.js` captures it. Wire `reporter.record(testInfo)` in `afterEach` and `reporter.flush()` in `afterAll`.
 
 ## 6. Cross-References
 
-- `/add-test` — creates/updates spec files; must follow §1, §2, §3.
+- `/add-test` — creates/updates spec files; must follow §1, §2, §3, §5.
 - `/add-page` — page objects are locators only (no assertions/logic).
 - `/add-action` — action methods live here, not in pages.
 - `/add-comments` — the only skill allowed to add JSDoc, and only in the patterns it defines.
-- `/proctoring` — owns the Student module TCs listed in §4.

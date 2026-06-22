@@ -30,24 +30,26 @@ Screenshots in `allure-results/` provide a visual reference but the MCP `browser
 
 | Symptom | Cause | Fix Location |
 |---------|-------|--------------|
-| Locator not found / `<element(s) not found>` | Selector changed in UI | `pages/StudentLMSPage.js` |
-| Strict mode violation (multiple elements) | Selector too broad | `pages/StudentLMSPage.js` |
-| Timeout waiting for element | Page flow changed | `actions/StudentLMSActions.js` |
-| URL assertion failed | Route/redirect changed | `actions/StudentLMSActions.js` |
-| Test scenario invalid | Feature removed | `tests/student/student.spec.js` |
+| Locator not found / `<element(s) not found>` | Selector changed in UI | the relevant `pages/*.js` (e.g. `OrdersPage.js`, `ReturnCreatePage.js`) |
+| Strict mode violation (multiple elements) | Selector too broad | the relevant `pages/*.js` |
+| Timeout waiting for element | Page flow changed | the relevant `actions/*.js` (e.g. `ReturnActions.js`) |
+| URL assertion failed | Route/redirect changed | the relevant `actions/*.js` |
+| Test scenario invalid | Feature removed | the Area spec under `tests/` (e.g. `tests/return/return.spec.js`) |
+
+> **Heal vs defect:** only self-heal a **locator/flow break** (the framework drifted from the UI). A **real product defect** (the feature behaves wrong) must stay FAIL and be documented in the report — do not "heal" it away.
 
 ## Step 4: Apply the Fix
 
 ### Locator-only change (most common)
-- Update ONLY the affected locator in `pages/StudentLMSPage.js`
+- Update ONLY the affected locator in the matching page object (e.g. `pages/OrdersPage.js`)
 - Never touch actions or test files for a locator change
 
 ### Flow change
-- Update the corresponding method in `actions/StudentLMSActions.js`
-- Flag it for review by reporting: "Flow changed in [module], updated [action file]"
+- Update the corresponding method in the matching action class (e.g. `actions/ReturnActions.js`)
+- Flag it for review: "Flow changed in [Area], updated [action file]"
 
 ### Feature removed
-- Comment out the test in `tests/student/student.spec.js`
+- Comment out the test in the Area spec (e.g. `tests/return/return.spec.js`)
 - Report: "Feature [name] appears removed, test commented out"
 
 ## Step 5: Verify

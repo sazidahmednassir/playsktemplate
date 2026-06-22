@@ -1,6 +1,6 @@
 ---
 name: project-reference
-description: Complete codebase map of the Playwright E2E framework — all page objects, actions, tests, config, and CI/CD files with their methods and purpose. Auto-invoked when Claude needs to understand the project structure.
+description: Complete codebase map of the Playwright E2E framework — all page objects, actions, tests, config, ticket source, and reporting with their methods and purpose. Auto-invoked when Claude needs to understand the project structure.
 user-invocable: false
 ---
 
@@ -11,104 +11,88 @@ user-invocable: false
 3-layer POM (Page Object Model):
 ```
 pages/    -> Locators only (selectors, no logic)
-actions/  -> Business logic (interactions, assertions)
-tests/    -> Specs using custom fixture
+actions/  -> Business logic (interactions, data extraction; no assertions)
+tests/    -> Specs using the custom fixture; assertions + report annotations
 ```
 
 ## Target Application
 
-- **App**: LMS (Moodle-based) — configured via `LMS_BASE_URL` in `.env`
-- **Plugin under test**: Proctoring Pro (face validation on quiz attempts)
-- **Credentials**: loaded from `.env` via `config/env.config.js`
+- **Storefront (customer):** https://sk-store.myei.app — "Sikder Store".
+- **Admin dashboard (staff):** https://admin.myei.app/shop/sk-store (EcomIntelligence, store-scoped; reached via `sk-store.myei.app/admin`). Auth = `/api/v1/auth/staff/login`.
+- **Plugin/feature under test:** Return / Exchange / Damage Claim workflow (touches Order, Inventory, Refund, Store Ops).
+- **Not used:** `platform-admin.myei.app` (rejects these credentials — see `tickets/return-exchange-damage.md`).
+- Payments bKash + SSLCommerz in sandbox. Credentials/URLs via `config/env.config.js` ← `.env`.
+
+## Ticket Source (replaces Excel)
+
+| File | Purpose |
+|------|---------|
+| `tickets/return-exchange-damage.md` | Ticket context + Test-Case matrix (TC id, Area, Title, Expected). Source of truth for test generation. |
 
 ## Page Objects
 
 | File | Key Locators |
 |------|-------------|
-| `pages/StudentLMSPage.js` | getEmailInput, getPasswordInput, getLoginBtn — login form |
-| | getDashboardHeading, getMyCoursesLink, getCourseLink — navigation |
-| | getAttemptQuizBtn, getContinueAttemptBtn — quiz attempt entry |
-| | getValidateFaceBtn(`#fcvalidate`) — Proctoring Pro trigger |
-| | getFaceValidationPopup, getFaceMatchedMessage, getFaceMismatchMessage — validation results |
-| | getValidationAgreementCheckbox, getStartAttemptBtn(`#id_submitbutton`) — start attempt |
-| | getCameraPermissionError, getNoCameraDeviceError — camera error states |
-| | getNoFaceWarning, getMultipleFacesWarning, getSuspiciousActivityBanner — TC-5 states |
-| | getQuizQuestionStem, getFinishAttemptBtn, getSubmitAllAndFinishBtn — quiz in progress |
+| `pages/AdminLoginPage.js` | email/password/remember/sign-in — staff login |
+| `pages/OrdersPage.js` | search, rows, view link, status badge, Return action, fulfillment, logs, product stock |
+| `pages/ReturnCreatePage.js` | type cards (Return/Exchange/Damage Claim), reason, item checkboxes, full-return toggle, qty, condition, note, submit |
+| `pages/ReturnDetailPage.js` | RTN heading, status badge, returned items, settlement values, stock-updated, settle/reject |
+| `pages/ReturnsListPage.js` | heading, Total Refunded KPI, search, status filter, rows, refund cell, view button |
+| `pages/InventoryPage.js` | stock-overview rows |
+| `pages/StoreFrontPage.js` | product cards, buy/add-to-cart, cart, checkout, address, payment options |
 
 ## Actions
 
 | File | Methods |
 |------|---------|
-| `actions/StudentLMSActions.js` | loginAsStudent(baseURL, email, password) |
-| | openCourseQuiz(courseName, quizName) |
-| | clickAttemptOrContinue() |
-| | clickValidateFace() |
-| | verifyFaceValidationMatched() |
-| | readFaceValidationMessage() |
-| | verifyFaceValidationMismatch() |
-| | verifyCameraPermissionError() |
-| | verifyNoCameraDeviceError() |
-| | verifyNoFaceWarning() |
-| | verifyMultipleFacesWarning() |
-| | startAttempt() |
-| | verifyQuizInProgressWithProctoring() |
-| | finishAttempt() |
+| `actions/AdminAuthActions.js` | loginAs / loginAsOwner / loginAsAdminUser / attemptLogin |
+| `actions/OrderActions.js` | openAllOrders, listOrders, findOrderByStatus, openOrder, getOrderStatus, hasReturnAction, clickReturnAction, getLogsText |
+| `actions/ReturnActions.js` | openReturnsList, getDashboardSummary, createRequest, openReturn, getDetailFacts, settle, reject |
+| `actions/InventoryActions.js` | openInventory, snapshot, availableFor |
+| `actions/StoreFrontActions.js` | openHome, isReachable, addFirstAvailableProductToCart |
 
-## Test Specs (7 tests)
+## Test Specs
 
-| File | Tests | Tag | Project |
-|------|-------|-----|---------|
-| `tests/student/student.spec.js` | TC-1 Face matched | `@baseline` | student-baseline |
-| | TC-2 Face mismatch | `@mismatch` | student-mismatch |
-| | TC-3 Camera permission denied | `@permissionDenied` | student-permission-denied |
-| | TC-4 No camera device | `@noCamera` | student-no-camera |
-| | TC-5a No face warning | `@noFace` | student-no-face |
-| | TC-5b Multiple faces warning | `@multiFace` | student-multi-face |
-| | TC-6 Full proctoring flow | `@baseline` | student-baseline |
+| File | Area | TCs |
+|------|------|-----|
+| `tests/order/order.spec.js` | Order | TC-1 storefront→All Orders, TC-2 status logs |
+| `tests/return/return.spec.js` | Return/Inventory/Refund | TC-3 gating, TC-6 restock, TC-7 refund method, TC-8 dashboard KPIs, TC-11 reject, TC-12 status filter |
+| `tests/exchange/exchange.spec.js` | Exchange | TC-9 replacement order |
+| `tests/damage/damage.spec.js` | Damage | TC-10 damage claim |
+| `tests/auth.setup.js` | (setup) | staff login → `.auth/owner.json`, `.auth/admin.json` |
 
 ## Fixture
 
-`tests/fixture/customfixture.js` — Injects `actions.studentLms` (StudentLMSActions) into all tests.
+`tests/fixture/customfixture.js` — injects `actions.{auth,orders,returns,inventory,store}` into every test via `safeRequire`.
 
 ## Config & Auth
 
 | File | Purpose |
 |------|---------|
-| `.env` | LMS_BASE_URL, LMS_STUDENT_EMAIL, LMS_STUDENT_PASSWORD, LMS_COURSE_NAME, LMS_QUIZ_NAME, USE_REAL_CAMERA |
-| `.env.example` | Template for all env vars |
-| `config/env.config.js` | Loads .env into `config` object with `config.lms.*` namespace |
-| `auth.setup.js` | Global setup — one-time login, saves session to `.auth/state.json` |
-| `playwright.config.js` | Per-tag browser projects, fake-media flags, Allure reporter, 120s timeout |
-| `.mcp.json` | Playwright MCP server (`@playwright/mcp`) for live DOM inspection |
+| `.env` / `.env.example` | STORE_URL, ADMIN_URL, SHOP_SLUG, OWNER_*, ADMIN_*, BKASH_*, AUTH_DIR |
+| `config/env.config.js` | `config.store.*`, `config.admin.*` (with `admin.path()`), `config.payment.bkash` |
+| `tests/auth.setup.js` | staff login, saves storageState (hydration-safe, keys on `/auth/staff/login`) |
+| `global.setup.js` | pins one `PLAYWRIGHT_RUN_TIMESTAMP` so all workers share one report folder |
+| `playwright.config.js` | setup→chromium projects, owner storageState, headless, list/html/allure reporters, 180s timeout |
+| `.mcp.json` | Playwright MCP server for live DOM inspection |
 
-## Camera Fixtures (Y4M)
-
-| File | Purpose |
-|------|---------|
-| `data/fixtures/face/baseline.y4m` | Matching face — TC-1, TC-6 |
-| `data/fixtures/face/mismatch.y4m` | Non-matching face — TC-2 |
-| `data/fixtures/face/no-face.y4m` | Empty frame — TC-5a |
-| `data/fixtures/face/multi-face.y4m` | Two faces — TC-5b |
-| `data/fixtures/face/generate-y4m.sh` | Regenerates Y4M from source JPEGs |
-
-Y4M files are git-ignored. Run `generate-y4m.sh` on every fresh clone.
-
-## Excel Integration
+## Reporting (replaces Excel)
 
 | File | Purpose |
 |------|---------|
-| `data/Proctoring Pro.xlsx` | Source test case matrix (Student tab) |
-| `excel/Proctoring Pro.xlsx` | Mirror copy |
-| `excel/results/` | Timestamped PASS/FAIL exports written by ExcelResultWriter |
-| `utils/ExcelResultWriter.js` | Writes TC result to column G after each test via `afterEach` |
+| `utils/ReportWriter.js` | Accumulates TC results (file-based ledger); renders `reports/<run>/report.md` + `report.docx` with severity/priority + embedded screenshots |
+| `utils/generateReport.js` | Builds the curated stakeholder report `docs/Test-Report.md` + `.docx` |
+| `reports/<timestamp>/` | Per-run machine report + `evidence/` screenshots |
+| `docs/Test-Report.*` | Curated deliverable; `docs/evidence/` full-page screenshots |
 
 ## CI/CD
 
-`.github/workflows/playwright.yml` — GitHub Actions: install, run tests, Allure report, email results.
+`.github/workflows/playwright.yml` — install, run tests, publish report.
 
 ## NPM Scripts
 
 | Command | Mode |
 |---------|------|
-| `npm run test:serial` | Serial — 1 worker (default) |
-| `npm run test:parallel` | Parallel — 4 workers |
+| `npm test` / `npm run test:serial` | 1 worker (default) |
+| `npm run test:parallel` | 4 workers |
+| `npm run smoke` / `npm run regression` | tag-filtered |

@@ -33,24 +33,19 @@ Record the project type. It determines which challenge flags to surface in Step 
 ### Question 2 — Target Site URL(s)
 
 Ask:
-> "What is the login URL of the site under test?"
+> "What are the storefront and admin URLs of the site under test?"
 
-Example answer: `https://your-lms-site.com/login/index.php`
+Example: storefront `https://sk-store.myei.app`, admin `https://admin.myei.app/shop/sk-store`.
 
-Write this as `BASE_URL` in `.env`. If the project also has a module-specific base URL (e.g. LMS student portal is a sub-path), ask for that too and write it as the appropriate variable (e.g. `LMS_BASE_URL`).
+Write these as `STORE_URL`, `ADMIN_URL`, and `SHOP_SLUG` in `.env`.
 
 ### Question 3 — Credentials
 
 Ask for:
-- Primary test user email/username → `USER2_EMAIL`
-- Primary test user password → `USER2_PASSWORD`
-- Any secondary role accounts (e.g. student, teacher, admin) → module-specific vars
-
-For an LMS project also ask:
-- Student email → `LMS_STUDENT_EMAIL`
-- Student password → `LMS_STUDENT_PASSWORD`
-- Course name under test → `LMS_COURSE_NAME`
-- Quiz name under test → `LMS_QUIZ_NAME`
+- Store Owner (staff) email/password → `OWNER_EMAIL` / `OWNER_PASSWORD`
+- Admin User (staff) email/password → `ADMIN_EMAIL` / `ADMIN_PASSWORD`
+- Storefront customer (if needed) → `CUSTOMER_EMAIL` / `CUSTOMER_PASSWORD`
+- Sandbox payment data (bKash) → `BKASH_NUMBER` / `BKASH_OTP` / `BKASH_PIN`
 
 ### Question 4 — Project-Specific Challenges
 
@@ -61,8 +56,8 @@ Use the project type from Question 1 to proactively flag known challenges:
 
 | Project Type | Known Challenge | Required Setup |
 |---|---|---|
-| **LMS + Proctoring** | Face validation requires a registered base image | Replace `data/fixtures/face/baseline.jpg` with the real student photo uploaded to the LMS profile, then run `bash data/fixtures/face/generate-y4m.sh` to regenerate Y4M fixtures |
-| **LMS + Proctoring** | Camera feed is faked via Y4M files | Y4M files are git-ignored — every contributor must run `generate-y4m.sh` locally |
+| **eCommerce (this project)** | Payment gateways block real cards | Use bKash / SSLCommerz **sandbox** mode + the test wallet in `.env` |
+| **eCommerce (this project)** | Staff login may submit as a native GET before React hydrates | The setup waits for hydration and keys on `/auth/staff/login` |
 | **eCommerce** | Payment gateways often block test cards | Use sandbox/test mode credentials |
 | **Any** | CAPTCHA | Disable in test environment or use bypass token |
 | **Any** | 2FA / OTP | Use a test account with 2FA disabled |
@@ -111,24 +106,13 @@ Fill in values collected in Step 0:
 
 | Variable | Description | Example |
 |---|---|---|
-| `BASE_URL` | Full login URL of the target app | `https://your-lms-site.com/login/index.php` |
-| `USER2_EMAIL` | Primary test user email | `user@example.com` |
-| `USER2_PASSWORD` | Primary test user password | `Admin@123` |
-| `AUTH_STATE_PATH` | Path to save browser session | `.auth/state.json` |
-| `LMS_BASE_URL` | LMS root URL (LMS projects only) | `https://your-lms-site.com/` |
-| `LMS_STUDENT_EMAIL` | Student account email | `student@example.com` |
-| `LMS_STUDENT_PASSWORD` | Student account password | `Student@123` |
-| `LMS_COURSE_NAME` | Course name under test | `Computational Problem Solving` |
-| `LMS_QUIZ_NAME` | Quiz name under test | `Test Quiz` |
-| `USE_REAL_CAMERA` | Use real webcam instead of Y4M | `false` |
-
-Add challenge notes as comments at the bottom of `.env`. Example:
-
-```env
-# CHALLENGE: Proctoring Pro requires a base image.
-# Replace data/fixtures/face/baseline.jpg with the real student LMS profile photo
-# then run: bash data/fixtures/face/generate-y4m.sh
-```
+| `STORE_URL` | Storefront base URL | `https://sk-store.myei.app` |
+| `ADMIN_URL` | Admin dashboard host | `https://admin.myei.app` |
+| `SHOP_SLUG` | Store slug under `/shop/` | `sk-store` |
+| `OWNER_EMAIL` / `OWNER_PASSWORD` | Store Owner (staff) login | `rayhansikder63@gmail.com` |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Admin User (staff) login | `nassir23@yopmail.com` |
+| `BKASH_NUMBER` / `BKASH_OTP` / `BKASH_PIN` | bKash sandbox wallet | `01770618575` / `12121` / `123456` |
+| `AUTH_DIR` | Folder for saved sessions | `.auth` |
 
 ---
 
@@ -138,38 +122,20 @@ Add challenge notes as comments at the bottom of `.env`. Example:
 mkdir -p .auth
 ```
 
----
-
-## Step 6: LMS + Proctoring Pro — Base Image Setup
-
-**Only required if project type is LMS with Proctoring Pro.**
-
-The face validation tests (TC-1, TC-6) compare the live camera feed against a stored profile photo. Until you replace the placeholder, TC-1 and TC-6 will fail with "Face not matched."
-
-1. Download the student photo that is uploaded to the LMS profile.
-2. Replace `data/fixtures/face/baseline.jpg` with that photo (640×480 JPEG recommended).
-3. Regenerate all Y4M camera fixtures:
-   ```bash
-   bash data/fixtures/face/generate-y4m.sh
-   ```
-4. Confirm the Y4M files were created:
-   ```bash
-   ls data/fixtures/face/*.y4m
-   ```
-
-Skip this step if `USE_REAL_CAMERA=true` (uses the real webcam instead).
+The `setup` Playwright project (`tests/auth.setup.js`) logs in as Store Owner /
+Admin User and writes `.auth/owner.json` + `.auth/admin.json` (storageState).
 
 ---
 
-## Step 7: Verify Setup
+## Step 6: Verify Setup
 
 Run a smoke test to confirm everything works:
 
 ```bash
-npx playwright test --grep "@baseline" --project=student-baseline
+npx playwright test --grep "@smoke" --project=chromium
 ```
 
-If it passes, setup is complete.
+If the storefront/admin login and All Orders checks pass, setup is complete.
 
 ---
 
@@ -179,11 +145,10 @@ If it passes, setup is complete.
 |---|---|
 | `Cannot find module` | Run `npm install` |
 | Browser not found | Run `npx playwright install --with-deps` |
-| TC-1/TC-6 fail with "Face not matched" | Base image not set — follow Step 6 |
-| Y4M files missing | Run `bash data/fixtures/face/generate-y4m.sh` |
-| Login test fails with timeout | Check `.env` `BASE_URL` and credentials |
-| `.auth/state.json` error | Run `mkdir -p .auth` and re-run tests |
-| Permission denied on `.auth/` | Run `chmod 755 .auth` |
+| Login `401 Invalid credentials` on `platform-admin.myei.app` | Use the EcomIntelligence dashboard `admin.myei.app/shop/sk-store` (staff login) — see the ticket file |
+| Login submits as a GET `?email=...` | React hadn't hydrated — the setup retries; ensure a short wait before submit |
+| Login test fails with timeout | Check `.env` `ADMIN_URL`, `SHOP_SLUG`, and credentials |
+| `.auth/owner.json` not found | Run the `setup` project first (it's a dependency of `chromium`) |
 
 ---
 
@@ -194,7 +159,5 @@ After successful setup, report:
 - Dependencies installed
 - Playwright browsers installed
 - `.env` status (created or already existed)
-- Project type recorded
-- Challenges documented
-- Base image status (LMS only): ready or pending
+- Auth sessions saved (`.auth/owner.json`, `.auth/admin.json`)
 - Smoke test result (pass/fail)

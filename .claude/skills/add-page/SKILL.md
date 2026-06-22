@@ -32,7 +32,13 @@ module.exports = PageName;
 
 ## Existing Page Objects
 
-- `pages/StudentLMSPage.js` — Full LMS locator set: login form, dashboard nav, quiz attempt, Proctoring Pro modal (validate face, face match/mismatch, camera errors, suspicious activity banners, start/finish attempt buttons)
+- `pages/AdminLoginPage.js` — staff login form (email/password/remember/sign-in)
+- `pages/OrdersPage.js` — All Orders list + order detail (status, Return action, fulfillment, logs, stock)
+- `pages/ReturnCreatePage.js` — Create Return/Exchange/Damage Claim form
+- `pages/ReturnDetailPage.js` — return detail (settle/reject, settlement values, stock-updated)
+- `pages/ReturnsListPage.js` — Returns & Refunds dashboard (KPIs, filter, rows)
+- `pages/InventoryPage.js` — Stock Overview rows
+- `pages/StoreFrontPage.js` — storefront product/cart/checkout/payment
 
 ## After Creating
 

@@ -11,12 +11,12 @@ Add human-readable comments to action classes and test spec files so any team me
 
 ## Action Class Comment Template
 
-Every method in `actions/StudentLMSActions.js` gets a JSDoc block with:
+Every method in an action class (e.g. `actions/ReturnActions.js`) gets a JSDoc block with:
 
 ```javascript
 /**
  * Brief description of what this method does
- * Used by: which TC in tests/student/student.spec.js calls this method
+ * Used by: which TC in tests/<area>/<area>.spec.js calls this method
  * @param {type} paramName - What the parameter is and where it comes from
  * Step 1: What happens → PageObject.getLocatorName → actual Playwright selector
  * Step 2: Next action → PageObject.getLocatorName → actual Playwright selector
@@ -28,10 +28,10 @@ Every method in `actions/StudentLMSActions.js` gets a JSDoc block with:
 
 1. **First line**: One sentence — what the method does
 2. **Used by**: Which TC title calls this (skip for utility methods)
-3. **@param**: Every parameter with type, name, and source (e.g., "from config.lms.student.email")
+3. **@param**: Every parameter with type, name, and source (e.g., "from config.admin.owner.email")
 4. **Steps**: Numbered, each showing:
-   - What happens (e.g., "Fill email", "Click Validate Face", "Assert visible")
-   - Page object locator used (e.g., `StudentLMSPage.getValidateFaceBtn`)
+   - What happens (e.g., "Fill email", "Click Return", "Read Stock Updated")
+   - Page object locator used (e.g., `ReturnDetailPage.getSettleButton`)
    - Actual Playwright selector (e.g., `page.locator("#fcvalidate")`)
 5. **@returns**: If the method returns a value, document what it returns
 
@@ -39,19 +39,20 @@ Every method in `actions/StudentLMSActions.js` gets a JSDoc block with:
 
 ```javascript
 /**
- * Click the Validate Face button and wait for the proctoring plugin response
- * Used by: TC-1, TC-2, TC-3, TC-4, TC-5a, TC-5b, TC-6
- * Step 1: Click Validate Face → StudentLMSPage.getValidateFaceBtn → page.locator("#fcvalidate")
- * Step 2: Wait for face validation popup → StudentLMSPage.getFaceValidationPopup → page.locator('[role="dialog"]...')
+ * Open a return record from the Returns & Refunds list and read its facts
+ * Used by: TC-6, TC-7, TC-9, TC-10
+ * Step 1: Open Returns list → ReturnsListPage.getRows → table tbody tr
+ * Step 2: Click the row's View → ReturnsListPage.getViewButtonFor → role=button "View"
+ * Step 3: Read Settlement + Details → ReturnDetailPage.getStockUpdatedValue
  */
-async clickValidateFace() {
+async openReturn(rtn) {
 ```
 
 ---
 
 ## Test Spec Comment Template
 
-Every test in `tests/student/student.spec.js` gets a JSDoc block with:
+Every test in an Area spec (e.g. `tests/return/return.spec.js`) gets a JSDoc block with:
 
 ```javascript
 /**
@@ -68,9 +69,9 @@ Every test in `tests/student/student.spec.js` gets a JSDoc block with:
 
 ### Test Comment Rules
 
-1. **TC ID**: Format `TC-N` matching the Excel row number (e.g., `TC-1`, `TC-5a`, `TC-6`)
-2. **Precondition**: Session state, camera fixture in use, permissions granted/denied
-3. **Steps**: Numbered user-facing actions (not code-level — "Click Validate Face" not "call clickValidateFace()")
+1. **TC ID**: Format `TC-N` matching the ticket Test-Case row (e.g., `TC-1`, `TC-6`)
+2. **Precondition**: Session state (which staff role), order status required, data prerequisites
+3. **Steps**: Numbered user-facing actions (not code-level — "Click Return" not "call clickReturnAction()")
 4. **Validation**: The actual assertion — what element or state is checked, include the Playwright locator
 5. **Expected**: Plain English — what the user should see if the test passes
 
@@ -78,15 +79,14 @@ Every test in `tests/student/student.spec.js` gets a JSDoc block with:
 
 ```javascript
 /**
- * TC-1: Face validation on quiz start shows 'Face matched'
- * Precondition: Student logged in, baseline.y4m fed to Chromium fake camera, camera+mic granted
+ * TC-6: Settling a Return restocks the returned item
+ * Precondition: Logged in as Store Owner; a settled Return-type return exists
  * Steps:
- *   1. Navigate to the course and open the quiz
- *   2. Click Attempt Quiz or Continue Attempt
- *   3. Click Validate Face
- *   4. Read the face validation message
- * Validation: Text matches /face\s*matched/i → StudentLMSPage.getFaceMatchedMessage
- * Expected: Proctoring Pro popup shows "Face Validation: Face matched."
+ *   1. Open Returns & Refunds
+ *   2. Open a settled Return record
+ *   3. Read the Settlement panel + Details
+ * Validation: Details "Stock Updated" → ReturnDetailPage.getStockUpdatedValue
+ * Expected: Stock Updated = Yes and the item is restocked in Inventory
  */
 ```
 
@@ -95,15 +95,18 @@ Every test in `tests/student/student.spec.js` gets a JSDoc block with:
 ## How to Run This Skill
 
 1. Read the target file (action or test spec)
-2. Read `pages/StudentLMSPage.js` to get exact selectors for each locator
+2. Read the relevant page object (e.g. `pages/ReturnDetailPage.js`) to get exact selectors
 3. Add comments following the templates above
 4. Do NOT change any code — only add comments
-5. Verify the file still runs: `npx playwright test tests/student/student.spec.js --workers=1`
+5. Verify the file still runs: `npx playwright test tests/return/return.spec.js --workers=1`
 
 ## Existing TC ID Ranges
 
-| Module | IDs in use |
-|--------|------------|
-| Student (Proctoring Pro) | TC-1, TC-2, TC-3, TC-4, TC-5a, TC-5b, TC-6 |
+| Area | IDs in use |
+|------|------------|
+| Order | TC-1, TC-2 |
+| Return / Inventory / Refund | TC-3, TC-6, TC-7, TC-8, TC-11, TC-12 |
+| Exchange | TC-9 |
+| Damage | TC-10 |
 
-When adding new Student TCs, continue from TC-7 onward.
+When adding new TCs, continue from TC-13 onward.
