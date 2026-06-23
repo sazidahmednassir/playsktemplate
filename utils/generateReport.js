@@ -117,6 +117,38 @@ const findings = [
     steps: ["Open https://platform-admin.myei.app/login", "Sign in with the Store Owner credentials", "Observe 401 Invalid credentials", "Open https://sk-store.myei.app/admin → redirects to admin.myei.app/shop/sk-store → login succeeds"],
     evidence: [EV("platform_admin_401.png")],
   },
+  {
+    tcId: "TC-13", area: "Refund", status: "PASS", severity: "High", priority: "High",
+    title: "Settled return moves money via cash refund or due reduction",
+    expected: "Every Settled return moves a positive value — a cash refund or a due reduction; no return settles with zero financial effect.",
+    actual: "All 6 sampled settled returns moved value: RTN-009 cash ৳3900, RTN-008 due ৳3900, RTN-007 due ৳4050, RTN-005 cash ৳150, RTN-004 due ৳1200, RTN-003 cash ৳3900. No no-effect settlements found.",
+    steps: ["Open Returns & Refunds", "Open each Settled return", "Read the cash refund and due-reduced amounts"],
+    evidence: [EV("TC-13_settled_returns_due_or_cash.png")],
+  },
+  {
+    tcId: "TC-14", area: "Refund", status: "FAIL", severity: "High", priority: "High",
+    title: 'Total Refunded KPI does not reconcile with settled-return refunds',
+    expected: 'The dashboard "Total Refunded" KPI is > 0 and equals (±1) the sum of refunds recorded on settled return details.',
+    actual: 'Across 6 settled returns the detail pages record ৳21,950 of refunds/due reductions, yet the "Total Refunded" KPI reads BDT 0 (difference ৳21,950). The aggregate refund KPI is broken — finance cannot reconcile refunds from this dashboard.',
+    steps: ["Open each Settled return and sum its refund / due-reduced value", "Read the Total Refunded KPI", "Compare the two"],
+    evidence: [EV("TC-14_total_refunded_kpi_zero.png")],
+  },
+  {
+    tcId: "TC-15", area: "Return", status: "PASS", severity: "High", priority: "Medium",
+    title: "No double-settle — a settled return exposes no Settle action",
+    expected: "A return already in Settled state shows no Settle button, so its refund cannot be issued twice.",
+    actual: "RTN-260622-009 (status Settled) exposes no Settle action — settlement is idempotent; a second refund cannot be triggered from the UI.",
+    steps: ["Open Returns & Refunds", "Open a Settled return", "Confirm the Settle action is absent"],
+    evidence: [EV("TC-15_no_settle_action.png")],
+  },
+  {
+    tcId: "TC-16", area: "Refund", status: "FAIL", severity: "High", priority: "Medium",
+    title: "Every settlement records the refund as Cash regardless of payment / settlement type",
+    expected: 'The settlement should reflect the real refund route; a digitally-paid order or a due-reduction settlement must not be labelled "Cash refund (cash)".',
+    actual: '5 of 6 sampled settled returns are labelled "Cash refund (cash)" — including RTN-008/007/004 where no cash moved at all (value went to due reduction) and RTN-009 which settles a bKash-paid order. The refund-method label is hardcoded to cash, corrupting reconciliation across the whole settlement history.',
+    steps: ["Open each Settled return", "Inspect the Settlement refund-method label", "Flag any recorded as cash where no cash was paid / order was digital"],
+    evidence: [EV("TC-16_refund_recorded_as_cash.png")],
+  },
 ];
 
 (async () => {

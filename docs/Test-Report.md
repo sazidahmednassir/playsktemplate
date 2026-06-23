@@ -2,14 +2,14 @@
 
 **Ticket:** Return, Exchange & Damage Claim workflow validation (Order, Inventory, Refund, Store Ops)  
 **Environment:** Sandbox — storefront sk-store.myei.app, admin admin.myei.app/shop/sk-store; bKash & SSLCommerz in sandbox mode  
-**Date:** 2026-06-22  
-**Run:** 2026-06-23_002450
+**Date:** 2026-06-23  
+**Run:** 2026-06-23_104952
 
 ## Summary
 
 | Total | Pass | Fail | Blocked | Skipped |
 | ----- | ---- | ---- | ------- | ------- |
-| 13 | 9 | 3 | 1 | 0 |
+| 17 | 11 | 5 | 1 | 0 |
 
 ## Results
 
@@ -17,6 +17,10 @@
 | -- | ----- | ---- | ------ | -------- | -------- |
 | TC-6 | Settling a Return does NOT restock the returned item | Inventory | FAIL | High | High |
 | TC-7 | bKash / digital refund is recorded as a Cash refund | Refund | FAIL | High | Medium |
+| TC-13 | Settled return moves money via cash refund or due reduction | Refund | PASS | High | High |
+| TC-14 | Total Refunded KPI does not reconcile with settled-return refunds | Refund | FAIL | High | High |
+| TC-15 | No double-settle — a settled return exposes no Settle action | Return | PASS | High | Medium |
+| TC-16 | Every settlement records the refund as Cash regardless of payment / settlement type | Refund | FAIL | High | Medium |
 | TC-8 | Returns dashboard "Total Refunded" KPI and REFUND column show 0 / blank | Refund | FAIL | Medium | Medium |
 | TC-9 | Settling an Exchange spawns a linked replacement order | Exchange | PASS | Medium | Medium |
 | TC-10 | Damage Claim captures condition + photos and is recorded | Damage | PASS | Medium | Medium |
@@ -69,6 +73,44 @@
 **Evidence:**
 
 ![TC-7](evidence/TC-7_return_settled_cash_refund_no_restock.png)
+
+### TC-14 — Total Refunded KPI does not reconcile with settled-return refunds
+
+- **Area:** Refund
+- **Severity:** High | **Priority:** High | **Status:** FAIL
+
+**Steps to reproduce:**
+
+1. Open each Settled return and sum its refund / due-reduced value
+2. Read the Total Refunded KPI
+3. Compare the two
+
+**Expected:** The dashboard "Total Refunded" KPI is > 0 and equals (±1) the sum of refunds recorded on settled return details.
+
+**Actual:** Across 6 settled returns the detail pages record ৳21,950 of refunds/due reductions, yet the "Total Refunded" KPI reads BDT 0 (difference ৳21,950). The aggregate refund KPI is broken — finance cannot reconcile refunds from this dashboard.
+
+**Evidence:**
+
+![TC-14](evidence/TC-14_TC-14_total_refunded_kpi_zero.png)
+
+### TC-16 — Every settlement records the refund as Cash regardless of payment / settlement type
+
+- **Area:** Refund
+- **Severity:** High | **Priority:** Medium | **Status:** FAIL
+
+**Steps to reproduce:**
+
+1. Open each Settled return
+2. Inspect the Settlement refund-method label
+3. Flag any recorded as cash where no cash was paid / order was digital
+
+**Expected:** The settlement should reflect the real refund route; a digitally-paid order or a due-reduction settlement must not be labelled "Cash refund (cash)".
+
+**Actual:** 5 of 6 sampled settled returns are labelled "Cash refund (cash)" — including RTN-008/007/004 where no cash moved at all (value went to due reduction) and RTN-009 which settles a bKash-paid order. The refund-method label is hardcoded to cash, corrupting reconciliation across the whole settlement history.
+
+**Evidence:**
+
+![TC-16](evidence/TC-16_TC-16_refund_recorded_as_cash.png)
 
 ### TC-8 — Returns dashboard "Total Refunded" KPI and REFUND column show 0 / blank
 

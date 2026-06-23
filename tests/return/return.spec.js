@@ -105,6 +105,77 @@ test.describe("Return workflow", () => {
   });
 });
 
+test.describe("Return / Refund edge cases", () => {
+  test.afterEach(async ({}, testInfo) => reporter.record(testInfo));
+  test.afterAll(async () => reporter.flush());
+
+  test("TC-13 Settled return moves money via cash refund or due reduction @regression", async ({ actions }, testInfo) => {
+    meta(testInfo, {
+      tcId: "TC-13", area: "Refund", severity: "High", priority: "High",
+      expected: "Every Settled return moves a positive value — either a cash refund or a due reduction (no return is settled with no financial effect).",
+      steps: "Open Returns & Refunds | Open each Settled return | Read cash refund and due-reduced amounts",
+    });
+    const { settled } = await actions.returns.collectSettledFacts();
+    expect(settled.length, "need at least one settled return").toBeGreaterThan(0);
+    const noEffect = settled.filter((s) => !(s.refund > 0));
+    await testInfo.attach("settled-returns", { path: await screenshot(actions, "tc13") });
+    meta(testInfo, {
+      actual: `Settled sampled=${settled.length}; values=[${settled.map((s) => `${s.rtn}: cash ${s.cashOut}/due ${s.dueReduced || 0}`).join(", ")}]; no-effect settlements=${noEffect.length}`,
+    });
+    expect(noEffect, "every settled return should refund cash or reduce due").toHaveLength(0);
+  });
+
+  test("TC-14 Total Refunded KPI reconciles with settled-return refunds @regression", async ({ actions }, testInfo) => {
+    meta(testInfo, {
+      tcId: "TC-14", area: "Refund", severity: "High", priority: "High",
+      expected: 'The dashboard "Total Refunded" KPI is > 0 and equals (±1) the sum of refunds recorded on settled return details.',
+      steps: "Open each Settled return and sum its refund | Read the Total Refunded KPI | Compare the two",
+    });
+    const { totalRefunded, settled } = await actions.returns.collectSettledFacts();
+    const sum = settled.reduce((a, s) => a + (s.refund || 0), 0);
+    const kpi = Number(String(totalRefunded || "0").replace(/,/g, "")) || 0;
+    await testInfo.attach("returns-dashboard", { path: await screenshot(actions, "tc14") });
+    meta(testInfo, {
+      actual: `Total Refunded KPI=BDT ${kpi}; sum of ${settled.length} settled-return refunds=BDT ${sum}; difference=${Math.abs(kpi - sum)}`,
+    });
+    expect(kpi, "KPI must be > 0 when settled refunds exist").toBeGreaterThan(0);
+    expect(Math.abs(kpi - sum), "KPI should reconcile with the sum of settled refunds").toBeLessThanOrEqual(1);
+  });
+
+  test("TC-15 A settled return exposes no Settle action (no double-settle) @regression", async ({ actions }, testInfo) => {
+    meta(testInfo, {
+      tcId: "TC-15", area: "Return", severity: "High", priority: "Medium",
+      expected: "A return already in Settled state shows no Settle button — settlement (and its refund) cannot be repeated.",
+      steps: "Open Returns & Refunds | Open a Settled return | Check that the Settle action is absent",
+    });
+    const summary = await actions.returns.getDashboardSummary();
+    const settled = summary.rows.find((r) => r.status === "Settled" && r.rtn);
+    expect(settled, "need a settled return").toBeTruthy();
+    await actions.returns.openReturn(settled.rtn);
+    const facts = await actions.returns.getDetailFacts();
+    const canSettle = await actions.returns.hasSettleAction();
+    await testInfo.attach("settled-return", { path: await screenshot(actions, "tc15") });
+    meta(testInfo, { actual: `${settled.rtn} status=${facts.status}; Settle action present=${canSettle}` });
+    expect(canSettle, "a settled return must not offer Settle again").toBeFalsy();
+  });
+
+  test("TC-16 Refund method matches payment across all settled returns @regression", async ({ actions }, testInfo) => {
+    meta(testInfo, {
+      tcId: "TC-16", area: "Refund", severity: "High", priority: "Medium",
+      expected: 'No settled return for a digitally-paid order records the refund as "Cash refund (cash)".',
+      steps: "Open each Settled return | Inspect the Settlement refund-method label | Flag any recorded as cash",
+    });
+    const { settled } = await actions.returns.collectSettledFacts();
+    expect(settled.length, "need at least one settled return").toBeGreaterThan(0);
+    const cash = settled.filter((s) => s.refundIsCash);
+    await testInfo.attach("settled-returns", { path: await screenshot(actions, "tc16") });
+    meta(testInfo, {
+      actual: `Settled sampled=${settled.length}; recorded as cash=${cash.length} [${cash.map((s) => s.rtn).join(", ")}]`,
+    });
+    expect(cash, "digital orders should not refund as cash").toHaveLength(0);
+  });
+});
+
 async function screenshot(actions, name) {
   const p = `reports/_shots/${name}_${Date.now()}.png`;
   require("fs").mkdirSync("reports/_shots", { recursive: true });

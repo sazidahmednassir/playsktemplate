@@ -76,17 +76,49 @@ class ReturnActions {
       const type = /Damage Claim/i.test(header) ? "Damage Claim"
         : /Exchange/i.test(header) ? "Exchange"
         : /Return/i.test(header) ? "Return" : null;
+      // NB: amounts are prefixed with the Taka sign (৳); don't exclude it from the gap.
+      const itemsRefund = (txt.match(/Items refund[^\d]*?৳?\s*([\d,]+)/i) || [])[1] || null;
+      const cashRefund = (txt.match(/Cash refund \([^)]*\)[^\d]*?৳?\s*([\d,]+)/i) || [])[1] || null;
+      // Settlement may instead reduce the customer's outstanding due rather than pay cash.
+      const dueReduced = (txt.match(/(?:Order )?due reduced[^\d]*?৳?\s*([\d,]+)/i) || [])[1] || null;
+      const num = (s) => (s == null ? 0 : Number(String(s).replace(/,/g, "")) || 0);
       return {
         status: (header.match(/\b(Requested|Settled|Rejected|Processing)\b/) || [])[0] || null,
         type,
-        itemsRefund: (txt.match(/Items refund[^৳\d]*([\d,]+)/i) || [])[1] || null,
-        cashRefund: (txt.match(/Cash refund[^৳]*৳\s*([\d,]+)/i) || [])[1] || null,
+        itemsRefund,
+        cashRefund,
+        dueReduced,
+        // Net value the settlement moved (cash paid out OR due reduced OR item value credited).
+        refund: Math.max(num(cashRefund), num(itemsRefund), num(dueReduced)),
+        // Cash actually paid out to the customer (excludes due reductions).
+        cashOut: num(cashRefund),
+        // True when the settlement labels the refund as cash, e.g. "Cash refund (cash)".
+        refundIsCash: /Cash refund \([^)]*cash[^)]*\)/i.test(txt),
         stockUpdated: (txt.match(/Stock Updated\s*(Yes|No)/i) || [])[1] || null,
         // Replacement order id may be prefixed with a unicode ellipsis (…).
         exchangeOrder: (txt.match(/Exchange order created[^\w]*([\w]+)/i) || [])[1] || null,
         stockPending: /Stock:\s*Pending/i.test(txt),
       };
     });
+  }
+
+  // True when the open return detail still offers a Settle action (used to assert no double-settle).
+  async hasSettleAction() {
+    const btn = this.detail.getSettleButton();
+    return (await btn.count()) > 0 && (await btn.first().isVisible().catch(() => false));
+  }
+
+  // Open each Settled return (capped) and collect its settlement facts for refund-integrity checks.
+  async collectSettledFacts(limit = 6) {
+    const summary = await this.getDashboardSummary();
+    const settled = summary.rows.filter((r) => r.status === "Settled" && r.rtn).slice(0, limit);
+    const out = [];
+    for (const r of settled) {
+      await this.openReturn(r.rtn);
+      const facts = await this.getDetailFacts();
+      out.push({ rtn: r.rtn, type: r.type, ...facts });
+    }
+    return { totalRefunded: summary.totalRefunded, settled: out };
   }
 
   async settle(noteText) {

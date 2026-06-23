@@ -58,3 +58,14 @@ reduces due / (should) restock; Reject closes the request.
 | TC-10 | Damage | Create Damage Claim captures condition + photos | Claim records per-item condition; order marked damaged |
 | TC-11 | Return | Reject a return request | Return → Rejected; no refund, no stock change, order status unchanged |
 | TC-12 | Return | Returns status filter matches real statuses | Filter options correspond to the statuses actually used on records |
+
+## Edge Cases — Return / Refund (depth)
+
+Deeper negative / consistency / reconciliation checks on the refund path.
+
+| TC | Area | Title | Expected |
+| -- | ---- | ----- | -------- |
+| TC-13 | Refund | Settled return records a positive refund (no silent zero/null settlement) | Every Settled return detail shows a refund amount > 0 |
+| TC-14 | Refund | Total Refunded KPI reconciles with the sum of settled-return refunds | Dashboard "Total Refunded" KPI equals (±1) the sum of refunds on settled return details, and is > 0 |
+| TC-15 | Return | No double-settle — a settled return exposes no Settle action | A return already in Settled state shows no Settle button (refund is idempotent) |
+| TC-16 | Refund | Refund method matches payment across all settled returns | No settled return for a digitally-paid order records the refund as "Cash refund (cash)" |
