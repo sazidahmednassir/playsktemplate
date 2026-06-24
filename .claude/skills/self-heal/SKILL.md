@@ -2,62 +2,53 @@
 name: self-heal
 description: Auto-detect and fix broken locators or UI changes when Playwright tests fail. Use after test failures to identify changed selectors and update page objects.
 user-invocable: true
-allowed-tools: Bash(npx playwright*) Bash(npm run test*) Read Edit Glob Grep mcp__playwright__browser_navigate mcp__playwright__browser_snapshot mcp__playwright__browser_click mcp__playwright__browser_fill_form mcp__playwright__browser_take_screenshot mcp__playwright__browser_wait_for
+allowed-tools: Bash(npx playwright*) Bash(npm run test*) Bash(node scripts/*) Read Edit Glob Grep mcp__playwright__browser_navigate mcp__playwright__browser_snapshot mcp__playwright__browser_click mcp__playwright__browser_fill_form mcp__playwright__browser_take_screenshot mcp__playwright__browser_wait_for
 ---
 
 # Self-Heal — Auto-Fix Broken Locators
 
-When tests fail, follow this process to diagnose and fix.
+When tests fail, diagnose and fix. **First distinguish a test defect (fix it)
+from a real app defect (keep it failing as evidence).** The Rentora baseline has
+3 known app defects (BUG-001/002/003) — do NOT "heal" those away.
 
-## Step 1: Read Error Output
+## Step 1: Read error output
+- Parse the Playwright error and `evidence/results.json`.
+- Find the failing locator and the failure screenshot under
+  `test-results/<...>/test-failed-1.png` (screenshot on failure is enabled).
 
-- Parse the Playwright error output and trace logs
-- Identify which locator or element caused the failure
-- Check failure screenshots in `allure-results/` (find most recent `*-attachment.png` files)
+## Step 2: Inspect live DOM with Playwright MCP (MANDATORY)
+1. `browser_navigate` to the failing page.
+   - Renter/owner site: `http://127.0.0.1:8000/...`
+   - Admin site: `http://localhost:8000/admin/...`
+   - If auth is required, log in via `browser_fill_form` + `browser_click` first
+     (owner1@rentora.test / admin@rentora.com.bd, pw `password`).
+2. `browser_snapshot` to read the accessibility tree (roles, names, text).
+3. Compare the rendered element against the failing selector.
 
-## Step 2: Inspect Live DOM with Playwright MCP Server (MANDATORY)
-
-**Always use the Playwright MCP server to inspect the live page before modifying any locator or flow.**
-
-1. Use `browser_navigate` to open the failing page in the MCP browser.
-2. Use `browser_snapshot` to capture the accessibility tree — this reveals the actual element structure, text content, roles, and IDs as rendered by the browser.
-3. Compare snapshot output against the selector that failed. The actual text or attribute may differ from the regex in the page object.
-4. If the page requires login first, navigate to `/login/index.php` and use `browser_fill_form` + `browser_click` to authenticate before navigating to the target page.
-
-Screenshots in `allure-results/` provide a visual reference but the MCP `browser_snapshot` gives the actual DOM — always prefer `browser_snapshot` when the screenshot is ambiguous or the element is hidden.
-
-## Step 3: Identify the Root Cause
-
-| Symptom | Cause | Fix Location |
+## Step 3: Root-cause table
+| Symptom | Cause | Fix location |
 |---------|-------|--------------|
-| Locator not found / `<element(s) not found>` | Selector changed in UI | `pages/StudentLMSPage.js` |
-| Strict mode violation (multiple elements) | Selector too broad | `pages/StudentLMSPage.js` |
-| Timeout waiting for element | Page flow changed | `actions/StudentLMSActions.js` |
-| URL assertion failed | Route/redirect changed | `actions/StudentLMSActions.js` |
-| Test scenario invalid | Feature removed | `tests/student/student.spec.js` |
+| element not found | selector changed | the relevant `pages/*.js` |
+| strict-mode violation (N elements) | selector too broad | add `{ exact: true }` / scope / `.first()` in `pages/*.js` |
+| timeout waiting | flow/route changed | `actions/*.js` |
+| URL assertion failed | redirect changed | `actions/*.js` or spec expectation |
+| 500 / stack trace / console errors | **app defect** | do NOT heal — report as a bug |
 
-## Step 4: Apply the Fix
-
-### Locator-only change (most common)
-- Update ONLY the affected locator in `pages/StudentLMSPage.js`
-- Never touch actions or test files for a locator change
-
-### Flow change
-- Update the corresponding method in `actions/StudentLMSActions.js`
-- Flag it for review by reporting: "Flow changed in [module], updated [action file]"
-
-### Feature removed
-- Comment out the test in `tests/student/student.spec.js`
-- Report: "Feature [name] appears removed, test commented out"
+## Step 4: Apply the fix
+- **Locator-only**: edit the property in the matching `pages/*.js`; never touch actions/specs.
+- **Flow**: edit the method in `actions/*.js`; report "flow changed in <module>".
+- **Feature removed**: skip the test and report it.
 
 ## Step 5: Verify
-
-- Re-run ONLY the previously failing tests to confirm the fix
-- Report: `old locator -> new locator`, which file was updated
+Re-run ONLY the previously failing tests:
+```bash
+npx playwright test --grep "AUTH-08"
+```
+Report `old locator -> new locator` and the file changed. Regenerate the report
+if results changed: `node scripts/generate-report.js`.
 
 ## Rules
-
-- NEVER put assertions or logic in page objects
-- NEVER hardcode values in test files
-- ALWAYS use `browser_snapshot` via MCP before guessing at a locator change
-- Preserve POM structure: locator fix in `pages/`, flow fix in `actions/`
+- NEVER put assertions/logic in page objects.
+- NEVER hardcode credentials/URLs — use `config/env.config.js`.
+- ALWAYS `browser_snapshot` before guessing a locator change.
+- Preserve POM: locator fix in `pages/`, flow fix in `actions/`.

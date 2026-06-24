@@ -9,31 +9,36 @@ allowed-tools: Read Edit Write Glob Grep
 
 Page objects contain ONLY locators. No assertions, no business logic.
 
-## Template for New Page Object
+## Template (class style, matches the Rentora framework)
 
 ```javascript
-const PageName = {
-  getElementName: (page) => page.locator("selector"),
-  getElementByParam: (page, param) =>
-    page.locator("selector", { hasText: param }),
-};
+class SomePage {
+  constructor(page) {
+    this.page = page;
+    this.heading = page.getByRole("heading", { name: "Title" });
+    this.submitButton = page.getByRole("button", { name: "Submit" });
+  }
 
-module.exports = PageName;
+  path() {
+    return "/some-route";   // relative; combine with baseURL/adminBaseURL
+  }
+}
+
+module.exports = SomePage;
 ```
 
 ## Rules
-
-1. **File location**: `pages/<PageName>.js`
-2. **Locators only** — no `expect()`, no `click()`, no `fill()`, no `waitFor()`
-3. **Every function takes `page` as first parameter**
-4. **Use descriptive names**: `getLoginBtn`, `getUsernameInput`, `getDashboardHeading`
-5. **Check existing pages first** — don't duplicate locators that already exist
-6. **Prefer stable selectors**: role > placeholder > test-id > CSS class > tag
+1. **File location**: `pages/<Name>.js`; portal pages go in `pages/owner/` or `pages/admin/`.
+2. **Locators only** — no `expect()`, `click()`, `fill()`, `goto()`.
+3. Constructor takes `page`; expose locators as properties.
+4. **Prefer stable selectors**: role > label/placeholder > test-id > CSS.
+5. **Check existing pages first** — don't duplicate.
+6. Add a `path()` (and parametrised helpers like `path(slug)`) for navigation.
 
 ## Existing Page Objects
-
-- `pages/StudentLMSPage.js` — Full LMS locator set: login form, dashboard nav, quiz attempt, Proctoring Pro modal (validate face, face match/mismatch, camera errors, suspicious activity banners, start/finish attempt buttons)
+- `HomePage`, `SearchPage`, `PropertyDetailPage`, `LoginPage`, `RegisterPage`
+- `owner/OwnerDashboardPage`, `owner/OwnerCreateWizardPage`
+- `admin/AdminDashboardPage`, `admin/AdminUsersPage`
 
 ## After Creating
-
-If a new page object is created, make sure the corresponding action file imports it.
+Instantiate the page inside the relevant action or spec (`new SomePage(page)`).

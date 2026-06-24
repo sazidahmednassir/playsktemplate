@@ -7,33 +7,34 @@ const isParallel = process.env.PARALLEL === "true";
 module.exports = defineConfig({
   testDir: "./tests",
   testMatch: "**/*.spec.js",
+  globalSetup: "./global-setup.js",
 
   fullyParallel: isParallel,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
-  timeout: 120000,
-  workers: isParallel ? 4 : 1,
+  retries: 0,
+  timeout: 60000,
+  workers: 1,
 
-  reporter: [["allure-playwright"]],
+  reporter: [
+    ["list"],
+    ["json", { outputFile: "evidence/results.json" }],
+    ["html", { outputFolder: "evidence/html-report", open: "never" }],
+  ],
 
   use: {
     baseURL: config.baseURL,
-    actionTimeout: 80000,
-    trace: "on",
-    headless: false,
+    actionTimeout: 20000,
+    navigationTimeout: 30000,
+    trace: "retain-on-failure",
+    headless: true,
     screenshot: "only-on-failure",
-    video: "retain-on-failure",
+    video: "off",
   },
 
   projects: [
     {
-      name: "Google Chrome",
-      use: {
-        viewport: null,
-        launchOptions: {
-          args: ["--start-maximized"],
-        },
-      },
+      name: "chromium",
+      use: { viewport: { width: 1440, height: 900 } },
     },
   ],
 });

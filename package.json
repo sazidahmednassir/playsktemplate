@@ -8,7 +8,10 @@
     "test:parallel": "PARALLEL=true npx playwright test",
     "test:serial": "npx playwright test",
     "smoke": "npx playwright test --grep @smoke",
-    "regression": "npx playwright test --grep @regression"
+    "regression": "npx playwright test --grep @regression",
+    "gen:excel": "node scripts/generate-excel.js",
+    "gen:report": "node scripts/generate-report.js",
+    "qa:report": "npx playwright test --reporter=json > evidence/results.json; node scripts/generate-report.js"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +24,7 @@
     "allure-playwright": "^3.0.7"
   },
   "dependencies": {
+    "docx": "^9.0.0",
     "dotenv": "^16.6.1",
     "playwright": "^1.49.1",
     "xlsx": "^0.18.5"

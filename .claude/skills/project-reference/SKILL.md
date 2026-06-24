@@ -1,114 +1,65 @@
 ---
 name: project-reference
-description: Complete codebase map of the Playwright E2E framework — all page objects, actions, tests, config, and CI/CD files with their methods and purpose. Auto-invoked when Claude needs to understand the project structure.
+description: Complete codebase map of the Rentora Playwright E2E framework — page objects, actions, tests, config, scripts and data with their purpose. Auto-invoked when Claude needs to understand the project structure.
 user-invocable: false
 ---
 
-# Project Reference — Codebase Map
+# Project Reference — Codebase Map (Rentora)
 
 ## Architecture
 
-3-layer POM (Page Object Model):
+3-layer POM:
 ```
 pages/    -> Locators only (selectors, no logic)
-actions/  -> Business logic (interactions, assertions)
-tests/    -> Specs using custom fixture
+actions/  -> Business logic / steps
+tests/    -> Specs (assertions only) using the custom fixture
 ```
 
 ## Target Application
+- **App**: Rentora rental marketplace (Laravel 13, PHP 8.3, Alpine.js, SQLite)
+- **Renter/Owner host**: `BASE_URL` = `http://127.0.0.1:8000`
+- **Admin host**: `ADMIN_BASE_URL` = `http://localhost:8000`
+- Seeded accounts: `owner1@rentora.test` / `owner2@rentora.test` / `admin@rentora.com.bd` (pw `password`)
 
-- **App**: LMS (Moodle-based) — configured via `LMS_BASE_URL` in `.env`
-- **Plugin under test**: Proctoring Pro (face validation on quiz attempts)
-- **Credentials**: loaded from `.env` via `config/env.config.js`
+## config/
+- `env.config.js` — exports `baseURL`, `adminBaseURL`, and `owner`, `owner2`,
+  `admin`, `renter` credential objects (from `.env`, with safe defaults).
 
-## Page Objects
+## data/
+- `testcases.js` — master TC inventory, grouped by module (`MODULES`). Single
+  source of truth for Excel, specs and the report.
 
-| File | Key Locators |
-|------|-------------|
-| `pages/StudentLMSPage.js` | getEmailInput, getPasswordInput, getLoginBtn — login form |
-| | getDashboardHeading, getMyCoursesLink, getCourseLink — navigation |
-| | getAttemptQuizBtn, getContinueAttemptBtn — quiz attempt entry |
-| | getValidateFaceBtn(`#fcvalidate`) — Proctoring Pro trigger |
-| | getFaceValidationPopup, getFaceMatchedMessage, getFaceMismatchMessage — validation results |
-| | getValidationAgreementCheckbox, getStartAttemptBtn(`#id_submitbutton`) — start attempt |
-| | getCameraPermissionError, getNoCameraDeviceError — camera error states |
-| | getNoFaceWarning, getMultipleFacesWarning, getSuspiciousActivityBanner — TC-5 states |
-| | getQuizQuestionStem, getFinishAttemptBtn, getSubmitAllAndFinishBtn — quiz in progress |
+## scripts/
+- `generate-excel.js` — `data/testcases.js` → `excel/Rentora-Testcases.xlsx` (one sheet/module).
+- `generate-report.js` — `testcases.js` + `evidence/results.json` + findings → `docreport/Rentora-Test-Report.docx`.
 
-## Actions
+## utils/
+- `RentoraResultWriter.js` — reads `excel/Rentora-Testcases.xlsx`, writes the
+  Actual Result column per TC, saves a timestamped copy under `excel/results/`.
+- `ExcelResultWriter.js` — legacy (Proctoring Pro); not used by Rentora specs.
 
-| File | Methods |
-|------|---------|
-| `actions/StudentLMSActions.js` | loginAsStudent(baseURL, email, password) |
-| | openCourseQuiz(courseName, quizName) |
-| | clickAttemptOrContinue() |
-| | clickValidateFace() |
-| | verifyFaceValidationMatched() |
-| | readFaceValidationMessage() |
-| | verifyFaceValidationMismatch() |
-| | verifyCameraPermissionError() |
-| | verifyNoCameraDeviceError() |
-| | verifyNoFaceWarning() |
-| | verifyMultipleFacesWarning() |
-| | startAttempt() |
-| | verifyQuizInProgressWithProctoring() |
-| | finishAttempt() |
+## pages/  (locators only)
+- `HomePage.js`, `SearchPage.js`, `PropertyDetailPage.js`, `LoginPage.js`,
+  `RegisterPage.js`
+- `owner/OwnerDashboardPage.js`, `owner/OwnerCreateWizardPage.js`
+- `admin/AdminDashboardPage.js`, `admin/AdminUsersPage.js`
 
-## Test Specs (7 tests)
+## actions/  (logic)
+- `AuthActions.js` — `gotoLogin`, `signIn`, `signInAsOwner/Admin/Renter`,
+  `registerUser`, `logout`.
+- `NavActions.js` — `goto`, `gotoStatus` (returns HTTP status),
+  `attachConsoleCollector` (capture console/page errors).
 
-| File | Tests | Tag | Project |
-|------|-------|-----|---------|
-| `tests/student/student.spec.js` | TC-1 Face matched | `@baseline` | student-baseline |
-| | TC-2 Face mismatch | `@mismatch` | student-mismatch |
-| | TC-3 Camera permission denied | `@permissionDenied` | student-permission-denied |
-| | TC-4 No camera device | `@noCamera` | student-no-camera |
-| | TC-5a No face warning | `@noFace` | student-no-face |
-| | TC-5b Multiple faces warning | `@multiFace` | student-multi-face |
-| | TC-6 Full proctoring flow | `@baseline` | student-baseline |
+## tests/
+- `auth.spec.js`, `guest-browsing.spec.js`, `search-filter.spec.js`,
+  `owner-portal.spec.js`, `admin-portal.spec.js`, `rbac-security.spec.js`
+- `fixture/customfixture.js` — injects `actions` (`auth`,`nav`) + `result` recorder.
 
-## Fixture
+## Root
+- `playwright.config.js` — headless, `globalSetup`, list+json+html reporters,
+  screenshot on failure.
+- `global-setup.js` — pins `PLAYWRIGHT_RUN_TIMESTAMP`, ensures `evidence/`.
 
-`tests/fixture/customfixture.js` — Injects `actions.studentLms` (StudentLMSActions) into all tests.
-
-## Config & Auth
-
-| File | Purpose |
-|------|---------|
-| `.env` | LMS_BASE_URL, LMS_STUDENT_EMAIL, LMS_STUDENT_PASSWORD, LMS_COURSE_NAME, LMS_QUIZ_NAME, USE_REAL_CAMERA |
-| `.env.example` | Template for all env vars |
-| `config/env.config.js` | Loads .env into `config` object with `config.lms.*` namespace |
-| `auth.setup.js` | Global setup — one-time login, saves session to `.auth/state.json` |
-| `playwright.config.js` | Per-tag browser projects, fake-media flags, Allure reporter, 120s timeout |
-| `.mcp.json` | Playwright MCP server (`@playwright/mcp`) for live DOM inspection |
-
-## Camera Fixtures (Y4M)
-
-| File | Purpose |
-|------|---------|
-| `data/fixtures/face/baseline.y4m` | Matching face — TC-1, TC-6 |
-| `data/fixtures/face/mismatch.y4m` | Non-matching face — TC-2 |
-| `data/fixtures/face/no-face.y4m` | Empty frame — TC-5a |
-| `data/fixtures/face/multi-face.y4m` | Two faces — TC-5b |
-| `data/fixtures/face/generate-y4m.sh` | Regenerates Y4M from source JPEGs |
-
-Y4M files are git-ignored. Run `generate-y4m.sh` on every fresh clone.
-
-## Excel Integration
-
-| File | Purpose |
-|------|---------|
-| `data/Proctoring Pro.xlsx` | Source test case matrix (Student tab) |
-| `excel/Proctoring Pro.xlsx` | Mirror copy |
-| `excel/results/` | Timestamped PASS/FAIL exports written by ExcelResultWriter |
-| `utils/ExcelResultWriter.js` | Writes TC result to column G after each test via `afterEach` |
-
-## CI/CD
-
-`.github/workflows/playwright.yml` — GitHub Actions: install, run tests, Allure report, email results.
-
-## NPM Scripts
-
-| Command | Mode |
-|---------|------|
-| `npm run test:serial` | Serial — 1 worker (default) |
-| `npm run test:parallel` | Parallel — 4 workers |
+## Outputs
+- `excel/results/Rentora-Testcases - <ts>.xlsx`, `evidence/results.json`,
+  `evidence/html-report/`, `evidence/screenshots/`, `docreport/Rentora-Test-Report.docx`.

@@ -1,6 +1,6 @@
 ---
 name: codebase-rules
-description: Authoritative codebase rules and spec file generation guidelines. Auto-loaded reference for all spec/page/action generators. Defines comment style, Excel-tab → spec-file mapping, folder structure, and the Student module test inventory.
+description: Authoritative codebase rules and spec file generation guidelines. Auto-loaded reference for all spec/page/action generators. Defines comment style, Excel-tab → spec-file mapping, folder structure, and the Rentora module test inventory.
 user-invocable: false
 allowed-tools: Read
 ---
@@ -11,113 +11,78 @@ These rules are authoritative. Every other skill that creates or edits files und
 
 ## 1. Documentation Comment Restriction
 
-Do **not** use block-style documentation comments inside:
-
-- `actions/`
-- `pages/`
-- spec files
-- any file under the `tests/` directory
-
-### Not Allowed
+Do **not** use block-style JSDoc comments inside `actions/`, `pages/`, or spec
+files. Prefer meaningful names and short inline comments.
 
 ```js
-/**
- * Precondition step: open login page and log in as a student.
- * @param {string} baseURL
- * @param {string} email
- * @param {string} password
- */
-async loginStudent() {}
+// Allowed
+async signInAsOwner() {}
 ```
 
-### Allowed
+> Exception: the `/add-comments` skill explicitly governs JSDoc on actions and TC
+> headers on specs. Outside that skill, do not add JSDoc blocks.
 
-- Meaningful function names
-- Inline comments only when necessary
-- Clear method naming conventions
+## 2. Layer Responsibilities (POM)
 
-```js
-async loginAsStudent(email, password) {}
+- `pages/` — **locators only**. No assertions, no logic. One class per page.
+- `actions/` — **business logic / steps**. Compose page locators; no assertions.
+- `tests/` — **assertions only**, via `expect`. Every spec requires the custom fixture.
+
+## 3. Excel Tab → Spec File Mapping
+
+Test cases live in `data/testcases.js` grouped by **module** (= Excel sheet).
+Each module maps to a single spec file. Never create one spec per test case.
+
+| Excel Sheet / Module | Spec File |
+| -------------------- | --------- |
+| Authentication       | `tests/auth.spec.js` |
+| GuestBrowsing        | `tests/guest-browsing.spec.js` |
+| SearchFilters        | `tests/search-filter.spec.js` |
+| OwnerPortal          | `tests/owner-portal.spec.js` |
+| AdminPortal          | `tests/admin-portal.spec.js` |
+| AccessControl        | `tests/rbac-security.spec.js` |
+| Security             | `tests/rbac-security.spec.js` |
+
+The `result.for(sheet, tcId, detail)` call in each test MUST use the exact
+module/sheet name from the table above so the Excel writer finds the row.
+
+## 4. Folder Structure
+
+```
+data/testcases.js          # master TC inventory (single source of truth)
+scripts/generate-excel.js  # builds excel/Rentora-Testcases.xlsx
+scripts/generate-report.js # builds docreport/Rentora-Test-Report.docx
+pages/                     # locators (pages/owner/*, pages/admin/* for portals)
+actions/                   # AuthActions, NavActions, ...
+tests/                     # *.spec.js + fixture/customfixture.js
+utils/RentoraResultWriter.js
+config/env.config.js
 ```
 
-> Exception: the `/add-comments` skill explicitly governs JSDoc on actions and TC headers on specs. Outside of that skill, do not add JSDoc blocks.
+## 5. Rentora Module Test Inventory
 
-## 2. Excel Tab → Spec File Mapping
+Modules and representative coverage (full list in `data/testcases.js`):
 
-All test cases under the same Excel tab must live in a **single** spec file, grouped by tab/module name.
+- **Authentication** — register (valid/invalid/duplicate/terms/phone), login
+  (owner/admin/renter/invalid/empty), verify-email gate, logout.
+- **GuestBrowsing** — home, search catalogue, type filter, property detail,
+  PII gating, city pages, 404s.
+- **SearchFilters** — price slider health, console-error health, type/bedroom/combined filters.
+- **OwnerPortal** — dashboard, my listings, 10-step wizard, pricing BVA, IDOR, profile.
+- **AdminPortal** — dashboard KPIs, review queue, approve/reject, users, role filter, ban, NID verify.
+- **AccessControl** — guest/owner/renter/admin route guards.
+- **Security** — contact-PII gating, error info-disclosure, password hashing, CSRF, banned login.
 
-| Excel Tab | Generated Spec File             |
-| --------- | ------------------------------- |
-| Student   | `tests/student/student.spec.js` |
-| Teacher   | `tests/teacher/teacher.spec.js` |
-| Quiz      | `tests/quiz/quiz.spec.js`       |
-| Course    | `tests/course/course.spec.js`   |
-| Admin     | `tests/admin/admin.spec.js`     |
-
-Rules:
-
-- Read Excel tabs dynamically.
-- Create or update spec files based on tab names.
-- Append all related test cases into the same spec file.
-- Never create a separate spec file per test case.
-
-## 3. Folder Structure
-
-```bash
-tests/
- ├── student/
- │    └── student.spec.js
- ├── teacher/
- │    └── teacher.spec.js
- ├── quiz/
- │    └── quiz.spec.js
-pages/
-actions/
-utils/
-```
-
-Each spec file must:
-
-- Contain module-specific test cases only
-- Reuse common actions/utilities
-- Avoid duplicate helper methods
-- Follow tab-wise organization from Excel
-
-## 4. Student Module — Required Test Cases
-
-Source: Proctoring Pro plugin workflow (https://proctoringformoodle.com/).
-
-All of the following must exist in `tests/student/student.spec.js`:
-
-1. Face validation on quiz start
-2. Face mismatch on quiz start
-3. Camera permission denied
-4. No camera device available
-5. Suspicious activity — no face / multiple faces
-6. Full proctoring flow (match → start → submit)
-
-Student module coverage areas:
-
-- Face validation
-- Suspicious activity detection
-- Camera permission validation
-- No-face detection
-- Multiple-face detection
-
-## 5. Generator Contract
+## 6. Generator Contract
 
 Any automation that produces specs must:
+1. Read the module name from `data/testcases.js`.
+2. Resolve the spec path from §3; append, never split.
+3. Reuse existing pages/actions; do not duplicate helpers.
+4. Register the result via `result.for(sheet, tcId, detail)`.
+5. After authoring, run the TC and confirm the Excel result is written.
 
-1. Read the Excel tab name.
-2. Resolve the target spec path from the table in §2.
-3. Append new test cases into that spec — never split.
-4. Reuse existing actions/pages; do not duplicate helpers.
-5. Follow the comment rules in §1.
-
-## 6. Cross-References
-
-- `/add-test` — creates/updates spec files; must follow §1, §2, §3.
-- `/add-page` — page objects are locators only (no assertions/logic).
-- `/add-action` — action methods live here, not in pages.
-- `/add-comments` — the only skill allowed to add JSDoc, and only in the patterns it defines.
-- `/proctoring` — owns the Student module TCs listed in §4.
+## 7. Cross-References
+- `/add-test`, `/add-page`, `/add-action` — must follow §1–§4.
+- `/add-comments` — the only skill allowed to add JSDoc.
+- `/rentora-qa` — owns the analyse→Excel→automate→report workflow.

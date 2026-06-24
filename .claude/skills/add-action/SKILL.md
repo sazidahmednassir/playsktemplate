@@ -7,60 +7,54 @@ allowed-tools: Read Edit Write Glob Grep
 
 # Add Action — Create or Update Action Class
 
-Actions contain business logic, page interactions, and assertions.
+Actions hold business logic / steps. They compose page-object locators.
+Keep **assertions out of actions** — assertions belong in specs.
 
-## Template for New Action Class
+## Template (matches the Rentora framework)
 
 ```javascript
-const PageName = require("../pages/PageName");
-const { expect } = require("@playwright/test");
+const SomePage = require("../pages/SomePage");
+const cfg = require("../config/env.config");
 
-class NewActions {
+class SomeActions {
   constructor(page) {
     this.page = page;
+    this.some = new SomePage(page);
   }
 
-  async doSomething() {
-    const element = PageName.getElement(this.page);
-    await element.click();
-  }
-
-  async verifySomething() {
-    await expect(PageName.getElement(this.page)).toBeVisible({ timeout: 10000 });
+  async openAndSubmit(base = cfg.baseURL) {
+    await this.page.goto(`${base}${this.some.path()}`, { waitUntil: "domcontentloaded" });
+    await this.some.submitButton.click();
   }
 }
 
-module.exports = NewActions;
+module.exports = SomeActions;
 ```
 
 ## Rules
+1. **File location**: `actions/<Name>Actions.js`.
+2. Constructor takes `page`; instantiate page objects there.
+3. **Import locators from page objects** — never write raw selectors in actions.
+4. **No `expect()`** in actions (assertions live in specs).
+5. **Never `waitForTimeout()`** — use `waitFor()`, `waitForLoadState()`, auto-waiting.
+6. **Never hardcode URLs/credentials** — use `config/env.config.js`.
+7. Support both hosts where relevant via a `base` arg (`cfg.baseURL` / `cfg.adminBaseURL`).
 
-1. **File location**: `actions/<ActionName>.js`
-2. **Constructor takes `page`** — store as `this.page`
-3. **Import locators from page objects** — never write raw selectors in actions
-4. **Use `expect` for assertions** — imported from `@playwright/test`
-5. **Prefer Playwright auto-waiting** — use `waitFor()` and `waitForLoadState()` over `waitForTimeout()`
-
-## After Creating
-
-1. **Register in fixture** — add the new action to `tests/fixture/customfixture.js`:
+## After Creating — register in the fixture
+Add the action to `tests/fixture/customfixture.js`:
 
 ```javascript
-const NewActions = require("../../actions/NewActions");
+const SomeActions = require("../../actions/SomeActions");
 
-exports.test = base.extend({
-  actions: async ({ page }, use) => {
-    const actions = {
-      studentLms: new StudentLMSActions(page),
-      newAction: new NewActions(page),  // <-- add here
-    };
-    await use(actions);
-  },
-});
+actions: async ({ page }, use) => {
+  await use({
+    auth: new AuthActions(page),
+    nav: new NavActions(page),
+    some: new SomeActions(page),   // <-- add here
+  });
+},
 ```
 
-2. **Update `/add-test` skill** if the new action adds a new `actions.*` namespace
-
 ## Existing Actions
-
-- `actions/StudentLMSActions.js` — Full Proctoring Pro flow: login, navigate to quiz, face validation, camera checks, suspicious activity, start/finish attempt
+- `AuthActions` — `signIn`, `signInAsOwner/Admin/Renter`, `registerUser`, `logout`.
+- `NavActions` — `goto`, `gotoStatus`, `attachConsoleCollector`.

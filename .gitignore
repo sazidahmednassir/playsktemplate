@@ -14,5 +14,11 @@ node_modules/
 # Authentication state
 .auth/
 
+# Per-run test artifacts (regenerable). Screenshots are kept as bug evidence.
+/excel/results/*.xlsx
+/evidence/results.json
+/evidence/html-report/
+/evidence/.last-run.json
+
 # Generated camera-feed Y4M files (regenerable via data/fixtures/face/generate-y4m.sh)
 data/fixtures/face/*.y4m
