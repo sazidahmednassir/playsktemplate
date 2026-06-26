@@ -4,7 +4,9 @@ class SearchPage {
     this.page = page;
     this.searchBox = page.getByRole("textbox", { name: /Search city, area, property type/i });
     this.searchButton = page.getByRole("button", { name: "Search" });
-    this.resultCount = page.getByText(/rentals found/i);
+    // Matches both "8 rentals found" (plural) and "1 rental found" (singular),
+    // plus the "No rentals found" empty-state heading.
+    this.resultCount = page.getByText(/rentals? found/i);
     this.gridButton = page.getByRole("button", { name: "Grid" });
     this.mapButton = page.getByRole("button", { name: "Map" });
     this.sortBy = page.getByRole("combobox", { name: "Sort by" });

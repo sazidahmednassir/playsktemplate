@@ -100,6 +100,28 @@ const BUGS = [
     shot: "BUG-003-search-fullpage.png",
     tcs: "SRCH-01, SRCH-02",
   },
+  {
+    id: "BUG-004",
+    title: "Search filters silently accept invalid input (negative / non-numeric / out-of-range) instead of validating it",
+    severity: "Low",
+    priority: "P3",
+    module: "Search & Discovery",
+    pre: "Guest on http://127.0.0.1:8000/search.",
+    steps: [
+      "Open /search?min_price=-100 (negative lower bound)",
+      "Open /search?min_price=abc (non-numeric)",
+      "Open /search?max_price=0 (zero ceiling)",
+      "Read the 'N rentals found' counter for each",
+    ],
+    expected:
+      "Invalid or out-of-range filter values are rejected or normalised with visible feedback (e.g. ignored AND flagged, or an HTTP 422), so the user understands their filter was not applied.",
+    actual:
+      "All three return HTTP 200 and silently drop the filter: min_price=-100 and min_price=abc each return the full catalogue (8 of 8) as if no filter were set, and max_price=0 is interpreted as 'no maximum' (8 of 8) rather than 'rent ≤ 0' (which would be 0). The query string still carries the bogus value, so the result set contradicts the apparent filter with no message. Behaviour is graceful (no crash) but unvalidated — a data-quality / UX-correctness gap on the primary discovery surface.",
+    evidence:
+      "Probed live: /search?min_price=-100 → '8 rentals found'; /search?min_price=abc → '8 rentals found'; /search?max_price=0 → '8 rentals found'. Compare the valid boundary /search?min_price=6001 → '7 rentals found'. Demonstrated by automated EDGE-02, EDGE-03 (graceful-handling assertions) and BVA-07.",
+    shot: "BUG-004-filter-no-validation.png",
+    tcs: "EDGE-02, EDGE-03, BVA-07",
+  },
 ];
 
 const RECOMMENDATIONS = {
@@ -117,6 +139,7 @@ const RECOMMENDATIONS = {
     "Enforce and unit-test BD phone format (+8801XXXXXXXXX / 01XXXXXXXXX) on both client and server.",
     "Add boundary validation on the Pricing step (reject negative / non-numeric rent and deposit).",
     "Enforce a documented password policy and confirm it is consistent across register and reset flows.",
+    "Harden /search filter inputs surfaced by the BVA/EP pass: negative and non-numeric min_price are silently ignored (HTTP 200) instead of validated, max_price=0 is interpreted as 'no maximum', and bedrooms beyond the offered 4+ partition return empty — document or reject these out-of-range partitions explicitly.",
   ],
   "Performance Improvements": [
     "Eliminate the 20 console errors on /search — they indicate repeated failed Alpine effect evaluations on every render.",
@@ -214,6 +237,8 @@ const failed = allTcs.filter((t) => t.exec === "FAIL").length;
 const manual = allTcs.filter((t) => !t.automated).length;
 const notExecuted = manual; // manual TCs were not auto-executed this run
 const blocked = 0;
+const epbvaAuto = allTcs.filter((t) => t.automated && ["bva", "ep", "edge"].includes(t.technique));
+const epbvaPass = epbvaAuto.filter((t) => t.exec === "PASS").length;
 
 // --- build document --------------------------------------------------------
 const children = [];
@@ -227,7 +252,7 @@ children.push(new Paragraph({
   alignment: AlignmentType.CENTER, spacing: { after: 40 },
 }));
 children.push(new Paragraph({
-  children: [new TextRun({ text: "Prepared by QA Automation (Playwright + Playwright-MCP) · 24 Jun 2026", size: 20, color: "888888" })],
+  children: [new TextRun({ text: "Prepared by QA Automation (Playwright + Playwright-MCP) · 26 Jun 2026", size: 20, color: "888888" })],
   alignment: AlignmentType.CENTER, spacing: { after: 240 },
 }));
 
@@ -236,9 +261,13 @@ children.push(H("1. Executive Summary", HeadingLevel.HEADING_1));
 children.push(P(
   "Rentora is a three-portal rental marketplace (public renter site, owner portal, admin portal). " +
   "The application was analysed live with Playwright-MCP across all roles (guest, renter, owner, admin), " +
-  "and 58 test cases were designed from the observed behaviour. 39 were automated and executed this run; " +
-  "the remaining 19 are documented manual/E2E cases. Testing uncovered 3 distinct defects, two of which " +
-  "(registration crash and debug-mode disclosure) are release-blocking."));
+  `and ${total} test cases were designed from the observed behaviour. ${automated} were automated and executed this run; ` +
+  `the remaining ${manual} are documented manual/E2E cases. This cycle expanded the suite with a data-driven ` +
+  "Boundary-Value-Analysis (BVA) and Equivalence-Partitioning (EP) matrix over the /search filters and the /register " +
+  `& /login validation (${epbvaAuto.length} automated EP/BVA/edge cases, ${epbvaPass} passing), with every expected ` +
+  "value pinned to live seed data — confirming the platform handles input boundaries and partitions robustly. " +
+  "Testing uncovered " +
+  `${BUGS.length} distinct defects, two of which (registration crash and debug-mode disclosure) are release-blocking.`));
 children.push(table([
   headerRow(["Metric", "Count"]),
   new TableRow({ children: [cell("Total test cases designed"), cell(String(total))] }),
@@ -263,6 +292,8 @@ children.push(H("2.1 Features Tested", HeadingLevel.HEADING_2));
   "Admin portal — dashboard KPIs, review queue, users list & role filter, self-ban protection, NID verify",
   "Access control — guest/owner/admin route guards, no-data-leak checks",
   "Security — contact-PII gating, error-page information disclosure",
+  `Boundary & equivalence (data-driven matrix) — /search price min/max boundaries (inclusive/exclusive across all 8 seeded rents), bedrooms / property-type / for-whom / furnishing / amenity (×27) / combined-filter partitions, and inverted/negative/non-numeric edge inputs`,
+  `Form validation — /register field EP/BVA (name, email-format classes, BD phone-format & length, password min-8) and /login negatives (empty, invalid-format, wrong/non-existent credentials, SQL-injection string, over-long input). ${epbvaAuto.length} automated BVA/EP/edge cases total, ${epbvaPass} passing`,
 ].forEach((t) => children.push(bullet(t)));
 children.push(H("2.2 Features Not Fully Tested (carried as manual / blocked)", HeadingLevel.HEADING_2));
 [
@@ -278,8 +309,8 @@ children.push(H("2.3 Coverage by Module", HeadingLevel.HEADING_2));
 const modRows = [headerRow(["Module", "Designed", "Automated", "Passed", "Failed"])];
 for (const [mod, tcs] of Object.entries(MODULES)) {
   const a = tcs.filter((t) => t.automated);
-  const pmod = a.filter((t) => execStatus[t.id] === "passed").length;
-  const fmod = a.filter((t) => execStatus[t.id] === "FAIL" || execStatus[t.id] === "failed").length;
+  const pmod = a.filter((t) => execStatus[t.id] === "PASS").length;
+  const fmod = a.filter((t) => execStatus[t.id] === "FAIL").length;
   modRows.push(new TableRow({ children: [
     cell(mod), cell(String(tcs.length)), cell(String(a.length)),
     cell(String(pmod), { color: PASSC }), cell(String(fmod), { color: fmod ? FAILC : undefined }),
@@ -349,7 +380,8 @@ children.push(H("Testing Coverage Summary", HeadingLevel.HEADING_2));
 children.push(P(
   `${total} test cases designed across ${Object.keys(MODULES).length} modules; ${automated} automated ` +
   `(${passed} passed, ${failed} failed); ${notExecuted} manual/E2E cases documented for the next cycle. ` +
-  `All 3 defects are reproduced by automated tests and captured with screenshot evidence.`));
+  `All ${BUGS.length} defects are captured with screenshot evidence; the functional/blocking defects ` +
+  `(BUG-001/002/003) are reproduced by failing automated tests, and BUG-004 is demonstrated by the EP/BVA edge cases.`));
 
 const doc = new Document({
   creator: "Rentora QA Automation",

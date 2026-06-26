@@ -10,6 +10,7 @@
 const base = require("@playwright/test");
 const AuthActions = require("../../actions/AuthActions");
 const NavActions = require("../../actions/NavActions");
+const SearchActions = require("../../actions/SearchActions");
 const { getWriter } = require("../../utils/RentoraResultWriter");
 
 const test = base.test.extend({
@@ -17,6 +18,7 @@ const test = base.test.extend({
     await use({
       auth: new AuthActions(page),
       nav: new NavActions(page),
+      search: new SearchActions(page),
     });
   },
 

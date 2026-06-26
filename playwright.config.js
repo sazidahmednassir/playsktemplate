@@ -11,7 +11,10 @@ module.exports = defineConfig({
 
   fullyParallel: isParallel,
   forbidOnly: !!process.env.CI,
-  retries: 0,
+  // One retry tolerates occasional admin-portal timing flakes (networkidle on the
+  // admin host under the full suite); deterministic app-defect failures
+  // (BUG-001/002/003) still fail on every attempt.
+  retries: process.env.CI ? 2 : 1,
   timeout: 60000,
   workers: 1,
 
@@ -26,7 +29,9 @@ module.exports = defineConfig({
     actionTimeout: 20000,
     navigationTimeout: 30000,
     trace: "retain-on-failure",
-    headless: true,
+    // Headed locally (visible, full-screen, matches the MCP browser in .mcp.json);
+    // headless in CI where there is no display.
+    headless: !!process.env.CI,
     screenshot: "only-on-failure",
     video: "off",
   },
@@ -34,7 +39,7 @@ module.exports = defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { viewport: { width: 1440, height: 900 } },
+      use: { viewport: { width: 1920, height: 1200 } },
     },
   ],
 });

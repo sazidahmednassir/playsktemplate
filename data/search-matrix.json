@@ -1,0 +1,642 @@
+[
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳6000 (inclusive lower boundary)",
+  "params": "min_price=6000",
+  "expectedCount": 8,
+  "id": "SM-001"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳6001 (just above the ৳6000 listing)",
+  "params": "min_price=6001",
+  "expectedCount": 7,
+  "id": "SM-002"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳18000 (inclusive lower boundary)",
+  "params": "min_price=18000",
+  "expectedCount": 7,
+  "id": "SM-003"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳18001 (just above the ৳18000 listing)",
+  "params": "min_price=18001",
+  "expectedCount": 6,
+  "id": "SM-004"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳20000 (inclusive lower boundary)",
+  "params": "min_price=20000",
+  "expectedCount": 6,
+  "id": "SM-005"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳20001 (just above the ৳20000 listing)",
+  "params": "min_price=20001",
+  "expectedCount": 5,
+  "id": "SM-006"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳22000 (inclusive lower boundary)",
+  "params": "min_price=22000",
+  "expectedCount": 5,
+  "id": "SM-007"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳22001 (just above the ৳22000 listing)",
+  "params": "min_price=22001",
+  "expectedCount": 4,
+  "id": "SM-008"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳25000 (inclusive lower boundary)",
+  "params": "min_price=25000",
+  "expectedCount": 4,
+  "id": "SM-009"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳25001 (just above the ৳25000 listing)",
+  "params": "min_price=25001",
+  "expectedCount": 3,
+  "id": "SM-010"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳28000 (inclusive lower boundary)",
+  "params": "min_price=28000",
+  "expectedCount": 3,
+  "id": "SM-011"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳28001 (just above the ৳28000 listing)",
+  "params": "min_price=28001",
+  "expectedCount": 2,
+  "id": "SM-012"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳32000 (inclusive lower boundary)",
+  "params": "min_price=32000",
+  "expectedCount": 2,
+  "id": "SM-013"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳32001 (just above the ৳32000 listing)",
+  "params": "min_price=32001",
+  "expectedCount": 1,
+  "id": "SM-014"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳35000 (inclusive lower boundary)",
+  "params": "min_price=35000",
+  "expectedCount": 1,
+  "id": "SM-015"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "min_price = ৳35001 (just above the ৳35000 listing)",
+  "params": "min_price=35001",
+  "expectedCount": 0,
+  "id": "SM-016"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳6000 (inclusive upper boundary)",
+  "params": "max_price=6000",
+  "expectedCount": 1,
+  "id": "SM-017"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳5999 (just below the ৳6000 listing)",
+  "params": "max_price=5999",
+  "expectedCount": 0,
+  "id": "SM-018"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳18000 (inclusive upper boundary)",
+  "params": "max_price=18000",
+  "expectedCount": 2,
+  "id": "SM-019"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳17999 (just below the ৳18000 listing)",
+  "params": "max_price=17999",
+  "expectedCount": 1,
+  "id": "SM-020"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳20000 (inclusive upper boundary)",
+  "params": "max_price=20000",
+  "expectedCount": 3,
+  "id": "SM-021"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳19999 (just below the ৳20000 listing)",
+  "params": "max_price=19999",
+  "expectedCount": 2,
+  "id": "SM-022"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳22000 (inclusive upper boundary)",
+  "params": "max_price=22000",
+  "expectedCount": 4,
+  "id": "SM-023"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳21999 (just below the ৳22000 listing)",
+  "params": "max_price=21999",
+  "expectedCount": 3,
+  "id": "SM-024"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳25000 (inclusive upper boundary)",
+  "params": "max_price=25000",
+  "expectedCount": 5,
+  "id": "SM-025"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳24999 (just below the ৳25000 listing)",
+  "params": "max_price=24999",
+  "expectedCount": 4,
+  "id": "SM-026"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳28000 (inclusive upper boundary)",
+  "params": "max_price=28000",
+  "expectedCount": 6,
+  "id": "SM-027"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳27999 (just below the ৳28000 listing)",
+  "params": "max_price=27999",
+  "expectedCount": 5,
+  "id": "SM-028"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳32000 (inclusive upper boundary)",
+  "params": "max_price=32000",
+  "expectedCount": 7,
+  "id": "SM-029"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳31999 (just below the ৳32000 listing)",
+  "params": "max_price=31999",
+  "expectedCount": 6,
+  "id": "SM-030"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳35000 (inclusive upper boundary)",
+  "params": "max_price=35000",
+  "expectedCount": 8,
+  "id": "SM-031"
+ },
+ {
+  "group": "Price",
+  "technique": "bva",
+  "label": "max_price = ৳34999 (just below the ৳35000 listing)",
+  "params": "max_price=34999",
+  "expectedCount": 7,
+  "id": "SM-032"
+ },
+ {
+  "group": "Type",
+  "technique": "ep",
+  "label": "Property type = 'family'",
+  "params": "type[]=family",
+  "expectedCount": 4,
+  "id": "SM-033"
+ },
+ {
+  "group": "Type",
+  "technique": "ep",
+  "label": "Property type = 'bachelor'",
+  "params": "type[]=bachelor",
+  "expectedCount": 1,
+  "id": "SM-034"
+ },
+ {
+  "group": "Type",
+  "technique": "ep",
+  "label": "Property type = 'sublet'",
+  "params": "type[]=sublet",
+  "expectedCount": 2,
+  "id": "SM-035"
+ },
+ {
+  "group": "Type",
+  "technique": "ep",
+  "label": "Property type = 'shared'",
+  "params": "type[]=shared",
+  "expectedCount": 1,
+  "id": "SM-036"
+ },
+ {
+  "group": "Type",
+  "technique": "ep",
+  "label": "Property type = 'hostel'",
+  "params": "type[]=hostel",
+  "expectedCount": 0,
+  "id": "SM-037"
+ },
+ {
+  "group": "Type",
+  "technique": "ep",
+  "label": "Property type = 'garage'",
+  "params": "type[]=garage",
+  "expectedCount": 0,
+  "id": "SM-038"
+ },
+ {
+  "group": "ForWhom",
+  "technique": "ep",
+  "label": "Suitable for = 'family'",
+  "params": "for_whom=family",
+  "expectedCount": 6,
+  "id": "SM-039"
+ },
+ {
+  "group": "ForWhom",
+  "technique": "ep",
+  "label": "Suitable for = 'bachelor'",
+  "params": "for_whom=bachelor",
+  "expectedCount": 5,
+  "id": "SM-040"
+ },
+ {
+  "group": "Furnishing",
+  "technique": "ep",
+  "label": "Furnishing = 'unfurnished'",
+  "params": "furnishing[]=unfurnished",
+  "expectedCount": 3,
+  "id": "SM-041"
+ },
+ {
+  "group": "Furnishing",
+  "technique": "ep",
+  "label": "Furnishing = 'semi_furnished'",
+  "params": "furnishing[]=semi_furnished",
+  "expectedCount": 3,
+  "id": "SM-042"
+ },
+ {
+  "group": "Furnishing",
+  "technique": "ep",
+  "label": "Furnishing = 'fully_furnished'",
+  "params": "furnishing[]=fully_furnished",
+  "expectedCount": 2,
+  "id": "SM-043"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=1 filter",
+  "params": "amenities[]=1",
+  "expectedCount": 3,
+  "id": "SM-044"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=2 filter",
+  "params": "amenities[]=2",
+  "expectedCount": 1,
+  "id": "SM-045"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=3 filter",
+  "params": "amenities[]=3",
+  "expectedCount": 1,
+  "id": "SM-046"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=4 filter",
+  "params": "amenities[]=4",
+  "expectedCount": 3,
+  "id": "SM-047"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=5 filter",
+  "params": "amenities[]=5",
+  "expectedCount": 1,
+  "id": "SM-048"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=6 filter",
+  "params": "amenities[]=6",
+  "expectedCount": 1,
+  "id": "SM-049"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=7 filter",
+  "params": "amenities[]=7",
+  "expectedCount": 1,
+  "id": "SM-050"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=8 filter",
+  "params": "amenities[]=8",
+  "expectedCount": 3,
+  "id": "SM-051"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=9 filter",
+  "params": "amenities[]=9",
+  "expectedCount": 0,
+  "id": "SM-052"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=10 filter",
+  "params": "amenities[]=10",
+  "expectedCount": 3,
+  "id": "SM-053"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=11 filter",
+  "params": "amenities[]=11",
+  "expectedCount": 1,
+  "id": "SM-054"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=12 filter",
+  "params": "amenities[]=12",
+  "expectedCount": 0,
+  "id": "SM-055"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=13 filter",
+  "params": "amenities[]=13",
+  "expectedCount": 0,
+  "id": "SM-056"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=14 filter",
+  "params": "amenities[]=14",
+  "expectedCount": 2,
+  "id": "SM-057"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=15 filter",
+  "params": "amenities[]=15",
+  "expectedCount": 0,
+  "id": "SM-058"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=16 filter",
+  "params": "amenities[]=16",
+  "expectedCount": 1,
+  "id": "SM-059"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=17 filter",
+  "params": "amenities[]=17",
+  "expectedCount": 1,
+  "id": "SM-060"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=18 filter",
+  "params": "amenities[]=18",
+  "expectedCount": 1,
+  "id": "SM-061"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=19 filter",
+  "params": "amenities[]=19",
+  "expectedCount": 1,
+  "id": "SM-062"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=20 filter",
+  "params": "amenities[]=20",
+  "expectedCount": 1,
+  "id": "SM-063"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=21 filter",
+  "params": "amenities[]=21",
+  "expectedCount": 0,
+  "id": "SM-064"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=22 filter",
+  "params": "amenities[]=22",
+  "expectedCount": 2,
+  "id": "SM-065"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=23 filter",
+  "params": "amenities[]=23",
+  "expectedCount": 1,
+  "id": "SM-066"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=24 filter",
+  "params": "amenities[]=24",
+  "expectedCount": 1,
+  "id": "SM-067"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=25 filter",
+  "params": "amenities[]=25",
+  "expectedCount": 2,
+  "id": "SM-068"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=26 filter",
+  "params": "amenities[]=26",
+  "expectedCount": 0,
+  "id": "SM-069"
+ },
+ {
+  "group": "Amenity",
+  "technique": "ep",
+  "label": "Amenity id=27 filter",
+  "params": "amenities[]=27",
+  "expectedCount": 1,
+  "id": "SM-070"
+ },
+ {
+  "group": "Combined",
+  "technique": "ep",
+  "label": "family flats with >=2 bedrooms",
+  "params": "type[]=family&bedrooms=2",
+  "expectedCount": 4,
+  "id": "SM-071"
+ },
+ {
+  "group": "Combined",
+  "technique": "ep",
+  "label": "family flats from ৳20,000",
+  "params": "type[]=family&min_price=20000",
+  "expectedCount": 4,
+  "id": "SM-072"
+ },
+ {
+  "group": "Combined",
+  "technique": "ep",
+  "label": ">=3 bedrooms, fully furnished",
+  "params": "bedrooms=3&furnishing[]=fully_furnished",
+  "expectedCount": 0,
+  "id": "SM-073"
+ },
+ {
+  "group": "Combined",
+  "technique": "ep",
+  "label": "bachelor up to ৳20,000",
+  "params": "type[]=bachelor&max_price=20000",
+  "expectedCount": 1,
+  "id": "SM-074"
+ },
+ {
+  "group": "Combined",
+  "technique": "ep",
+  "label": "for family, >=2 bedrooms",
+  "params": "for_whom=family&bedrooms=2",
+  "expectedCount": 4,
+  "id": "SM-075"
+ },
+ {
+  "group": "Combined",
+  "technique": "ep",
+  "label": "rent between ৳20,000 and ৳30,000",
+  "params": "min_price=20000&max_price=30000",
+  "expectedCount": 4,
+  "id": "SM-076"
+ },
+ {
+  "group": "Combined",
+  "technique": "ep",
+  "label": "family OR bachelor (multi-type)",
+  "params": "type[]=family&type[]=bachelor",
+  "expectedCount": 5,
+  "id": "SM-077"
+ },
+ {
+  "group": "Combined",
+  "technique": "ep",
+  "label": "fully furnished for family",
+  "params": "furnishing[]=fully_furnished&for_whom=family",
+  "expectedCount": 2,
+  "id": "SM-078"
+ },
+ {
+  "group": "Combined",
+  "technique": "ep",
+  "label": ">=2 bedrooms between ৳20,000-৳30,000",
+  "params": "bedrooms=2&min_price=20000&max_price=30000",
+  "expectedCount": 2,
+  "id": "SM-079"
+ },
+ {
+  "group": "Combined",
+  "technique": "ep",
+  "label": "family flats, 4+ bedrooms",
+  "params": "type[]=family&bedrooms=4",
+  "expectedCount": 1,
+  "id": "SM-080"
+ }
+]

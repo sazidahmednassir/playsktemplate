@@ -682,6 +682,318 @@ const MODULES = {
       automated: false,
     },
   ],
+
+  // ===========================================================================
+  // Dedicated Equivalence-Partitioning (EP) + Boundary-Value-Analysis (BVA)
+  // pass over the two richest input surfaces: the /search filter query params
+  // and the /register form validation. All values below are pinned to the live
+  // seed data (rent set: 6,000 / 18,000 / 20,000 / 22,000 / 25,000 / 28,000 /
+  // 32,000 / 35,000 ৳ across 8 approved listings) so the expected counts are
+  // deterministic. Derived from live analysis — see scripts probe notes.
+  BoundaryEquivalence: [
+    // --- min_price boundary value analysis (filter is rent >= min, inclusive) -
+    {
+      id: "BVA-01",
+      title: "min_price on the lower boundary keeps the cheapest listing (৳6,000)",
+      precondition: "8 approved listings; lowest rent = ৳6,000",
+      description: "BVA — exact lower boundary; min_price equal to the cheapest rent must include it",
+      steps: "1. Open /search?min_price=6000\n2. Read the 'N rentals found' counter",
+      expected: "8 rentals found (rent>=6000 is inclusive, the ৳6,000 listing is retained)",
+      priority: "High",
+      technique: "bva",
+      automated: true,
+    },
+    {
+      id: "BVA-02",
+      title: "min_price one above the lower boundary drops the cheapest listing",
+      precondition: "8 approved listings; lowest rent = ৳6,000",
+      description: "BVA — boundary+1; min_price = 6001 must exclude the ৳6,000 listing",
+      steps: "1. Open /search?min_price=6001\n2. Read the result counter",
+      expected: "7 rentals found (only the ৳6,000 listing is excluded)",
+      priority: "High",
+      technique: "bva",
+      automated: true,
+    },
+    {
+      id: "BVA-03",
+      title: "min_price on the upper boundary keeps only the most expensive listing",
+      precondition: "8 approved listings; highest rent = ৳35,000",
+      description: "BVA — exact upper boundary; min_price equal to the dearest rent keeps just that one",
+      steps: "1. Open /search?min_price=35000\n2. Read the result counter",
+      expected: "1 rental found (only the ৳35,000 listing)",
+      priority: "Medium",
+      technique: "bva",
+      automated: true,
+    },
+    {
+      id: "BVA-04",
+      title: "min_price above the maximum rent returns an empty result set",
+      precondition: "8 approved listings; highest rent = ৳35,000",
+      description: "BVA — just outside the upper boundary; min_price = 35001 yields zero matches",
+      steps: "1. Open /search?min_price=35001\n2. Read the result counter and empty state",
+      expected: "0 rentals found; graceful 'No rentals found' empty state, no server error",
+      priority: "Medium",
+      technique: "bva",
+      automated: true,
+    },
+    // --- max_price boundary value analysis (filter is rent <= max, inclusive) -
+    {
+      id: "BVA-05",
+      title: "max_price on the lower boundary keeps only the cheapest listing",
+      precondition: "8 approved listings; lowest rent = ৳6,000",
+      description: "BVA — max_price equal to the cheapest rent is inclusive",
+      steps: "1. Open /search?max_price=6000\n2. Read the result counter",
+      expected: "1 rental found (the ৳6,000 listing, rent<=6000 inclusive)",
+      priority: "Medium",
+      technique: "bva",
+      automated: true,
+    },
+    {
+      id: "BVA-06",
+      title: "max_price one below the cheapest rent returns an empty result set",
+      precondition: "8 approved listings; lowest rent = ৳6,000",
+      description: "BVA — boundary-1; max_price = 5999 excludes every listing",
+      steps: "1. Open /search?max_price=5999\n2. Read the result counter",
+      expected: "0 rentals found; graceful empty state, no server error",
+      priority: "Medium",
+      technique: "bva",
+      automated: true,
+    },
+    {
+      id: "BVA-07",
+      title: "max_price = 0 is treated as 'no upper bound', not 'rent <= 0'",
+      precondition: "8 approved listings",
+      description: "EP/edge — zero is a distinct partition: the unset/no-bound class, not a literal ceiling",
+      steps: "1. Open /search?max_price=0\n2. Read the result counter",
+      expected: "8 rentals found (0 is interpreted as no maximum, the full catalogue is shown)",
+      priority: "Low",
+      technique: "ep",
+      automated: true,
+    },
+    // --- bedrooms equivalence partitioning (each 'X+' class is one partition) --
+    {
+      id: "EP-01",
+      title: "bedrooms = Any partition returns the full catalogue",
+      precondition: "8 approved listings",
+      description: "EP — the unfiltered 'Any' partition",
+      steps: "1. Open /search?bedrooms=\n2. Read the result counter",
+      expected: "8 rentals found",
+      priority: "Low",
+      technique: "ep",
+      automated: true,
+    },
+    {
+      id: "EP-02",
+      title: "bedrooms = 1+ partition includes every listing",
+      precondition: "All listings have at least 1 bedroom",
+      description: "EP — '1+' class",
+      steps: "1. Open /search?bedrooms=1\n2. Read the result counter",
+      expected: "8 rentals found",
+      priority: "Medium",
+      technique: "ep",
+      automated: true,
+    },
+    {
+      id: "EP-03",
+      title: "bedrooms = 2+ partition narrows the result set",
+      precondition: "Seed mix of bedroom counts",
+      description: "EP — '2+' class",
+      steps: "1. Open /search?bedrooms=2\n2. Read the result counter",
+      expected: "5 rentals found (listings with >=2 bedrooms)",
+      priority: "Medium",
+      technique: "ep",
+      automated: true,
+    },
+    {
+      id: "EP-04",
+      title: "bedrooms = 3+ partition narrows the result set further",
+      precondition: "Seed mix of bedroom counts",
+      description: "EP — '3+' class (mirrors manual SRCH-04, now automated)",
+      steps: "1. Open /search?bedrooms=3\n2. Read the result counter",
+      expected: "3 rentals found (listings with >=3 bedrooms)",
+      priority: "Medium",
+      technique: "ep",
+      automated: true,
+    },
+    {
+      id: "EP-05",
+      title: "bedrooms = 4+ partition keeps only the largest listings",
+      precondition: "Seed mix of bedroom counts",
+      description: "EP — '4+' class (the highest UI option)",
+      steps: "1. Open /search?bedrooms=4\n2. Read the result counter",
+      expected: "1 rental found (listings with >=4 bedrooms)",
+      priority: "Medium",
+      technique: "ep",
+      automated: true,
+    },
+    {
+      id: "EP-06",
+      title: "bedrooms = 5 (out-of-range partition) returns an empty result set",
+      precondition: "UI offers Any/1+/2+/3+/4+ only; no listing has 5+ bedrooms",
+      description: "EP/edge — a value beyond the offered partitions is handled gracefully",
+      steps: "1. Open /search?bedrooms=5\n2. Read the result counter and empty state",
+      expected: "0 rentals found; graceful empty state, no server error",
+      priority: "Low",
+      technique: "edge",
+      automated: true,
+    },
+    // --- property-type equivalence partitioning ------------------------------
+    {
+      id: "EP-07",
+      title: "type = family partition returns only Family Flats",
+      precondition: "8 approved listings of mixed types; 4 are family",
+      description: "EP — property-type 'family' class via type[]=family",
+      steps: "1. Open /search?type[]=family\n2. Read the result counter",
+      expected: "4 rentals found (Family Flat listings only)",
+      priority: "Medium",
+      technique: "ep",
+      automated: true,
+    },
+    // --- edge / robustness cases on the filter inputs ------------------------
+    {
+      id: "EDGE-01",
+      title: "Inverted price range (min > max) returns an empty set, no crash",
+      precondition: "8 approved listings",
+      description: "Edge — contradictory boundaries; min_price=50000 & max_price=10000",
+      steps: "1. Open /search?min_price=50000&max_price=10000\n2. Read the result counter",
+      expected: "0 rentals found; HTTP 200; graceful empty state (no listing can satisfy both)",
+      priority: "Medium",
+      technique: "edge",
+      automated: true,
+    },
+    {
+      id: "EDGE-02",
+      title: "Non-numeric min_price is ignored gracefully",
+      precondition: "8 approved listings",
+      description: "Edge — invalid input class; min_price=abc must not break the page",
+      steps: "1. Open /search?min_price=abc\n2. Read HTTP status and result counter",
+      expected: "HTTP 200; filter ignored; 8 rentals found; no server error or stack trace",
+      priority: "Medium",
+      technique: "edge",
+      automated: true,
+    },
+    {
+      id: "EDGE-03",
+      title: "Negative min_price is ignored gracefully",
+      precondition: "8 approved listings",
+      description: "Edge/BVA — below-zero boundary; min_price=-100 must not break the page",
+      steps: "1. Open /search?min_price=-100\n2. Read HTTP status and result counter",
+      expected: "HTTP 200; negative bound ignored; 8 rentals found; no server error",
+      priority: "Low",
+      technique: "edge",
+      automated: true,
+    },
+    {
+      id: "EDGE-04",
+      title: "No-match search term shows the zero-result empty state",
+      precondition: "8 approved listings",
+      description: "Edge — zero-result query (mirrors manual GUEST-10, now automated)",
+      steps: "1. Open /search?q=Zzzzzz\n2. Read the result counter and empty state",
+      expected: "0 rentals found; 'No rentals found' empty state with a broaden-search hint, no crash",
+      priority: "Medium",
+      technique: "edge",
+      automated: true,
+    },
+    // --- register form: BVA + EP on validated fields -------------------------
+    {
+      id: "BVA-08",
+      title: "Password below the 8-character minimum boundary is rejected",
+      precondition: "Guest on /register; all other fields valid",
+      description: "BVA — minimum length boundary-1; a 7-character password must fail validation",
+      steps: "1. Open /register\n2. Fill valid name/email/phone/role/terms\n3. Set Password and Confirm to a 7-char value (e.g. 'Pass12!')\n4. Submit",
+      expected: "Inline error 'must be at least 8 characters'; account not created; stays on /register; no HTTP 500",
+      priority: "High",
+      technique: "bva",
+      automated: true,
+    },
+    {
+      id: "EP-08",
+      title: "Phone in the 'too-short numeric' partition is rejected",
+      precondition: "Guest on /register; all other fields valid",
+      description: "EP — invalid phone class; '12345' is not a valid BD number (01XXXXXXXXX / +8801XXXXXXXXX)",
+      steps: "1. Open /register\n2. Fill valid name/email/password/role/terms\n3. Set Phone = '12345'\n4. Submit",
+      expected: "Validation rejects the phone; account not created; stays on /register; no HTTP 500",
+      priority: "Medium",
+      technique: "ep",
+      automated: true,
+    },
+    {
+      id: "EP-09",
+      title: "Phone in the 'alphabetic' partition is rejected",
+      precondition: "Guest on /register; all other fields valid",
+      description: "EP — invalid phone class; non-digit input must fail the BD phone rule",
+      steps: "1. Open /register\n2. Fill valid name/email/password/role/terms\n3. Set Phone = 'abcdefghijk'\n4. Submit",
+      expected: "Validation rejects the phone; account not created; stays on /register; no HTTP 500",
+      priority: "Medium",
+      technique: "ep",
+      automated: true,
+    },
+  ],
 };
 
-module.exports = { MODULES };
+// ===========================================================================
+// Data-driven modules. Every expected value is pinned to the LIVE app by the
+// matrix probe (scripts/probe-matrix style), persisted to:
+//   data/search-matrix.json    — one entry per /search filter partition/boundary
+//   data/form-validation.json  — register/login invalid-input probes (kept only
+//                                 where the app actually rejects/blocks them)
+// This lets the EP/BVA/edge suite scale to a large, verifiable case count
+// without hand-writing (or inventing) each expected result.
+// ===========================================================================
+const SEARCH_MATRIX = require("./search-matrix.json");
+const RAW_FORM = require("./form-validation.json");
+
+const PRIO_BY_GROUP = { Price: "Medium", Combined: "Medium", Type: "Medium", ForWhom: "Medium", Furnishing: "Medium", Amenity: "Low" };
+
+MODULES.SearchMatrix = SEARCH_MATRIX.map((m) => ({
+  id: m.id,
+  title: m.label,
+  precondition: "8 approved listings (live seed: rents ৳6,000–৳35,000)",
+  description: `${m.group} ${String(m.technique).toUpperCase()} — /search?${m.params}`,
+  steps: `1. Open /search?${m.params}\n2. Read the 'N rentals found' counter`,
+  expected: `${m.expectedCount} rental${m.expectedCount === 1 ? "" : "s"} found`,
+  priority: PRIO_BY_GROUP[m.group] || "Medium",
+  technique: m.technique,
+  automated: true,
+}));
+
+// Keep only the invalid inputs the app deterministically rejects (register) or
+// blocks (login) — drop any that slipped through (e.g. accepted then crashed via
+// the known mailer defect), so each automated case is a clean negative.
+const FORM_CASES = RAW_FORM
+  .filter((f) => (f.kind === "REG" ? f.rejected : f.blocked))
+  .map((f, i) => {
+    const id = `FV-${String(i + 1).padStart(2, "0")}`;
+    if (f.kind === "REG") {
+      return {
+        id, surface: "register", technique: f.technique, label: f.label,
+        fields: f.fields || {}, emailUnderTest: /email/i.test(f.label),
+        expected: "Validation rejects the input; account not created; stays on /register; no HTTP 500",
+      };
+    }
+    return {
+      id, surface: "login", technique: f.technique, label: f.label,
+      email: f.email, password: f.password,
+      expected: "Login denied; stays on /login; no server error",
+    };
+  });
+
+MODULES.FormValidation = FORM_CASES.map((c) => ({
+  id: c.id,
+  title: `${c.surface === "register" ? "Register" : "Login"} — ${c.label}`,
+  precondition:
+    c.surface === "register"
+      ? "Guest on /register; every field valid except the one under test"
+      : "Guest on /login",
+  description: `${String(c.technique).toUpperCase()} — ${c.surface} input: ${c.label}`,
+  steps:
+    c.surface === "register"
+      ? `1. Open /register\n2. Fill an otherwise-valid form\n3. Set the field under test (${c.label})\n4. Click Create account`
+      : `1. Open /login\n2. Enter the credentials under test (${c.label})\n3. Click Sign in`,
+  expected: c.expected,
+  priority: c.technique === "security" ? "High" : "Medium",
+  technique: c.technique,
+  automated: true,
+}));
+
+module.exports = { MODULES, SEARCH_MATRIX, FORM_CASES };

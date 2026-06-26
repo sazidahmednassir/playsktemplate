@@ -1,0 +1,285 @@
+[
+ {
+  "surface": "register",
+  "technique": "validation",
+  "label": "Empty full name",
+  "fields": {
+   "name": ""
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-01"
+ },
+ {
+  "surface": "register",
+  "technique": "bva",
+  "label": "Name single character",
+  "fields": {
+   "name": "A"
+  },
+  "rejected": false,
+  "crashed": true,
+  "kind": "REG",
+  "id": "REG-02"
+ },
+ {
+  "surface": "register",
+  "technique": "bva",
+  "label": "Name 300 characters (over-long)",
+  "fields": {
+   "name": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-03"
+ },
+ {
+  "surface": "register",
+  "technique": "ep",
+  "label": "Email missing @ ('plainaddress')",
+  "fields": {
+   "email": "plainaddress"
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-04"
+ },
+ {
+  "surface": "register",
+  "technique": "ep",
+  "label": "Email missing domain ('user@')",
+  "fields": {
+   "email": "user@"
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-05"
+ },
+ {
+  "surface": "register",
+  "technique": "ep",
+  "label": "Email missing local part ('@domain.com')",
+  "fields": {
+   "email": "@domain.com"
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-06"
+ },
+ {
+  "surface": "register",
+  "technique": "ep",
+  "label": "Email with spaces ('a b@x.com')",
+  "fields": {
+   "email": "a b@x.com"
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-07"
+ },
+ {
+  "surface": "register",
+  "technique": "ep",
+  "label": "Email double-@ ('a@@b.com')",
+  "fields": {
+   "email": "a@@b.com"
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-08"
+ },
+ {
+  "surface": "register",
+  "technique": "bva",
+  "label": "Phone 10 digits (one short)",
+  "fields": {
+   "phone": "0171234567"
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-09"
+ },
+ {
+  "surface": "register",
+  "technique": "bva",
+  "label": "Phone 12 digits (one long)",
+  "fields": {
+   "phone": "017123456789"
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-10"
+ },
+ {
+  "surface": "register",
+  "technique": "ep",
+  "label": "Phone without leading 0 ('1712345678')",
+  "fields": {
+   "phone": "1712345678"
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-11"
+ },
+ {
+  "surface": "register",
+  "technique": "ep",
+  "label": "Phone alphabetic",
+  "fields": {
+   "phone": "abcdefghijk"
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-12"
+ },
+ {
+  "surface": "register",
+  "technique": "bva",
+  "label": "Password 6 chars (below min)",
+  "fields": {
+   "password": "Pass1!",
+   "confirm": "Pass1!"
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-13"
+ },
+ {
+  "surface": "register",
+  "technique": "bva",
+  "label": "Password empty",
+  "fields": {
+   "password": "",
+   "confirm": ""
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-14"
+ },
+ {
+  "surface": "register",
+  "technique": "negative",
+  "label": "Password/confirm mismatch",
+  "fields": {
+   "password": "Password123!",
+   "confirm": "Different456!"
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-15"
+ },
+ {
+  "surface": "register",
+  "technique": "validation",
+  "label": "Terms unaccepted",
+  "fields": {
+   "terms": false
+  },
+  "rejected": true,
+  "crashed": false,
+  "kind": "REG",
+  "id": "REG-16"
+ },
+ {
+  "surface": "login",
+  "technique": "validation",
+  "label": "Empty email and password",
+  "email": "",
+  "password": "",
+  "blocked": true,
+  "crashed": false,
+  "kind": "LOGIN",
+  "id": null
+ },
+ {
+  "surface": "login",
+  "technique": "validation",
+  "label": "Empty password",
+  "email": "owner1@rentora.test",
+  "password": "",
+  "blocked": true,
+  "crashed": false,
+  "kind": "LOGIN",
+  "id": null
+ },
+ {
+  "surface": "login",
+  "technique": "validation",
+  "label": "Empty email",
+  "email": "",
+  "password": "password",
+  "blocked": true,
+  "crashed": false,
+  "kind": "LOGIN",
+  "id": null
+ },
+ {
+  "surface": "login",
+  "technique": "ep",
+  "label": "Invalid email format",
+  "email": "not-an-email",
+  "password": "password",
+  "blocked": true,
+  "crashed": false,
+  "kind": "LOGIN",
+  "id": null
+ },
+ {
+  "surface": "login",
+  "technique": "negative",
+  "label": "Valid email, wrong password",
+  "email": "owner1@rentora.test",
+  "password": "wrong-pass-xyz",
+  "blocked": true,
+  "crashed": false,
+  "kind": "LOGIN",
+  "id": null
+ },
+ {
+  "surface": "login",
+  "technique": "negative",
+  "label": "Non-existent account",
+  "email": "ghost.1782465096507@rentora.test",
+  "password": "whatever123",
+  "blocked": true,
+  "crashed": false,
+  "kind": "LOGIN",
+  "id": null
+ },
+ {
+  "surface": "login",
+  "technique": "security",
+  "label": "SQL-injection string in email",
+  "email": "' OR '1'='1",
+  "password": "' OR '1'='1",
+  "blocked": true,
+  "crashed": false,
+  "kind": "LOGIN",
+  "id": null
+ },
+ {
+  "surface": "login",
+  "technique": "bva",
+  "label": "Over-long credentials (500 chars)",
+  "email": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@x.com",
+  "password": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+  "blocked": true,
+  "crashed": false,
+  "kind": "LOGIN",
+  "id": null
+ }
+]

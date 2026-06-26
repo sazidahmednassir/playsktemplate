@@ -46,7 +46,10 @@ class RentoraResultWriter {
    * @param {{sheet:string, tcId:string, status:"PASS"|"FAIL"|"SKIP"|"BLOCKED", detail?:string}} opts
    */
   write({ sheet, tcId, status, detail = "" }) {
-    const wb = XLSX.readFile(this.outPath, { cellStyles: true });
+    // NB: do NOT pass { cellStyles: true } — round-tripping styles once per test
+    // (×N tests, same file) duplicates style records and bloats the workbook to
+    // tens of MB. Column widths (!cols) are sheet-level and survive without it.
+    const wb = XLSX.readFile(this.outPath);
     const ws = wb.Sheets[sheet];
     if (!ws) throw new Error(`Sheet "${sheet}" not found in ${this.outPath}`);
 

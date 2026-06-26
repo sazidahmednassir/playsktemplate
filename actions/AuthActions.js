@@ -55,6 +55,7 @@ class AuthActions {
     if (password !== null) await this.register.password.fill(password);
     if (confirm !== null) await this.register.confirmPassword.fill(confirm);
     if (role === "owner") await this.register.roleListProperty.check();
+    else if (role === "renter") await this.register.roleFindRental.check();
     if (acceptTerms) await this.register.terms.check();
     await this.register.createAccountButton.click();
     await this.page.waitForLoadState("domcontentloaded").catch(() => {});

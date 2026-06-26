@@ -48,6 +48,10 @@ test.describe("Admin Portal", () => {
     result.for(SHEET, "ADM-08", "Admin's own row exposed no Ban action.");
     const users = new AdminUsersPage(page);
     await actions.nav.goto(users.path(), cfg.adminBaseURL);
+    // Search by email so the admin row is found regardless of pagination — the
+    // users table grows as test registrations accumulate over runs.
+    await users.searchBox.fill(cfg.admin.username);
+    await users.filterButton.click();
     const adminRow = users.rowByEmail(cfg.admin.username);
     await expect(adminRow).toBeVisible();
     await expect(adminRow.getByRole("button", { name: "Ban" })).toHaveCount(0);
