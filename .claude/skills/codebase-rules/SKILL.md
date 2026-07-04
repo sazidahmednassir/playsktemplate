@@ -9,6 +9,20 @@ allowed-tools: Read
 
 These rules are authoritative. Every other skill that creates or edits files under `tests/`, `actions/`, or `pages/` must comply with them.
 
+## 0. ⚠️ MANDATORY: Website Analysis Before Code Generation
+
+**Before generating ANY test cases or automation code, this exact workflow MUST be followed:**
+
+1. **Analyze the website** using the Playwright MCP Server (`browser_navigate` + `browser_snapshot`).
+2. **Explore every page** in the relevant portal (renter/public, owner, admin) and understand the complete user journey end-to-end.
+3. **Verify actual UI elements**, locators, and business workflows from the live DOM — never guess or assume.
+4. **Understand the application's business logic** — roles, permissions, state machines, validation rules, error handling — before writing test cases or automation scripts.
+5. **Generate test cases and automation code ONLY after completing website analysis.**
+6. **Validate** that the generated test cases cover the actual functionality and end-to-end user workflows observed during analysis.
+
+> This rule is non-negotiable. Every skill (add-test, rentora-qa, self-heal, etc.) MUST comply.
+> The Playwright MCP server is configured in `.mcp.json` at the project root.
+
 ## 1. Documentation Comment Restriction
 
 Do **not** use block-style JSDoc comments inside `actions/`, `pages/`, or spec

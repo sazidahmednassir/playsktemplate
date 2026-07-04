@@ -2,7 +2,7 @@
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": ["@playwright/mcp@latest", "--viewport-size=1920,1200"]
+      "args": ["@playwright/mcp@latest", "--config=/home/nassir/Documents/rentorautomation/playsktemplate/playwright-mcp.config.json"]
     }
   }
 }

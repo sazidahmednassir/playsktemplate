@@ -11,16 +11,46 @@ Behave like a senior QA engineer: understand the system before writing tests,
 then automate and report. Always use the **Playwright MCP server**
 (`browser_navigate` + `browser_snapshot`) for live analysis.
 
+## Phase 0 — Mandatory Website Analysis (MUST run before any code generation)
+**Before generating ANY test cases or automation code, you MUST:**
+
+1. **Analyze the website** using the Playwright MCP Server (`browser_navigate` + `browser_snapshot`).
+2. **Explore every page** in the relevant portal(s) — understand the complete user journey end-to-end.
+3. **Verify actual UI elements**, locators, and business workflows from the live DOM — never guess or assume.
+4. **Understand the application's business logic** — roles, permissions, state machines, validation rules, error handling.
+5. **Generate test cases and automation code ONLY after completing full website analysis.**
+6. **Validate** that the generated test cases cover the actual functionality and E2E workflows observed.
+
+> This rule is MANDATORY. Do not skip analysis. Do not assume you know the UI.
+> The Playwright MCP server is configured in `.mcp.json` at the project root.
+
+## Phase 0a — Browser size (always)
+**Run the desktop pass full-screen in a maximised window, then sweep responsive.**
+The window must actually fill the monitor — a *fixed* `viewport` emulates a box
+and detaches the window from the screen, so it never maximises. Use
+`viewport: null` + `--start-maximized` instead (with `--window-size=1920,1200`
+as the headless/CI fallback). This is already wired in:
+- `playwright.config.js` → `use: { viewport: null, launchOptions: { args:
+  ["--start-maximized", "--window-size=1920,1200"] } }`.
+- `playwright-mcp.config.json` (referenced from `.mcp.json` via `--config`) →
+  `launchOptions.args` start-maximized + `contextOptions.viewport: null`.
+
+Do **not** call `browser_resize` on the desktop pass — `setViewportSize` is what
+shrinks the window. Only resize for the responsive sweep (tablet 768×1024,
+mobile 375×812), then the screenshots/specs cover both. Roles to log in with come
+from `config/env.config.js` (admin / owner1 / owner2 / renter).
+
 ## Phase 1 — Analyse (Playwright MCP)
 Explore every portal and role before writing any test case:
 - Public/Renter (`http://127.0.0.1:8000`): home, `/search` (+ console errors),
   property detail, register, login, verify-email.
 - Owner (`/owner/*`, login `owner1@rentora.test`): dashboard, my listings,
-  10-step Add-Listing wizard, messages, profile.
+  10-step Add-Listing wizard (step 7 = **Photos**), messages, profile.
 - Admin (`http://localhost:8000/admin/*`, `admin@rentora.com.bd`): dashboard,
-  Review Queue, Users (ban), NID Verify.
+  Review Queue, **Add Listing → Photos (image upload)**, Users (ban), NID Verify.
 Capture: roles & permissions, the owner→admin→publish flow, validations,
-console errors, and any server errors. Create test users as needed.
+console errors, and any server errors (e.g. the photo-upload `/images/upload`
+**HTTP 501 — Cloudinary not configured**, BUG-007). Create test users as needed.
 
 ## Phase 2 — Record test cases
 **Check existing first.** Before writing anything, grep `data/testcases.js` and
@@ -102,18 +132,43 @@ After the run, sanity-check the artifact reflects this run (mtime is fresh, tota
 `test-results/`; copy bug evidence into `evidence/screenshots/` named
 `BUG-00N-...png`.
 
-## Phase 5 — Report
-Maintain the BUGS / RECOMMENDATIONS / RISKS structures in
-`scripts/generate-report.js`, then:
+## Phase 5 — Report (three deliverables, always regenerate all three)
+There are **three** Word reports, each from its own data-driven generator. When a
+QA pass changes findings, update the relevant data array(s) and regenerate **all
+three** so they stay consistent — never leave one stale.
+
+1. **Bug report** — defects only. Edit the `BUGS` array in
+   `scripts/generate-bug-report.js` (id, severity, priority, steps, expected,
+   actual, evidence, `shot`/`shot2` from `evidence/screenshots/`); keep the
+   summary counts + defect index in sync. → `docreport/Rentora-Bug-Report.docx`.
+2. **Recommendations report** — improvements. Add an `R#` to the at-a-glance
+   table and a matching section in `scripts/generate-recommendations.js`; its
+   screenshots live in `evidence/recommendations/` (copy any shared bug shot in).
+   → `docreport/Rentora-Recommendations.docx`.
+3. **Test report** — the full QA writeup (BUGS / RECOMMENDATIONS / RISKS) in
+   `scripts/generate-report.js`. → `docreport/Rentora-Test-Report.docx`.
+4. **Role-based report** — coverage + verdict per role (Guest / Renter / Owner /
+   Admin + cross-role). `scripts/generate-role-report.js` reads `data/testcases.js`
+   + `evidence/results.json` and a `ROLES` model (module→role map, surfaces, bugs).
+   When a module or bug changes, update its `ROLES` entry. → `docreport/Rentora-Role-Based-Report.docx`.
+
 ```bash
-node scripts/generate-report.js  # -> docreport/Rentora-Test-Report.docx
+rtk proxy node scripts/generate-bug-report.js
+rtk proxy node scripts/generate-recommendations.js
+rtk proxy node scripts/generate-report.js
+rtk proxy node scripts/generate-role-report.js
 ```
-The report contains: Executive Summary, Feature Coverage, Bug Report (with
-screenshots), Improvement Recommendations, Risk Assessment, Overall QA Assessment.
+Each new defect = a TC in `data/testcases.js` **and** a `BUGS` entry **and**
+(usually) a recommendation. Run the desktop pass maximised + a responsive sweep
+and cite the viewport in the cover line. **Remove superseded reports** — keep one
+canonical file per type (`Rentora-Bug-Report.docx`, `Rentora-Recommendations.docx`,
+`Rentora-Test-Report.docx`); delete stale/duplicate docx (e.g. an old
+`Test-Report.docx`) so `docreport/` never accumulates outdated copies.
 
 ## Deliverables
 Excel test cases · automated specs · `evidence/results.json` + screenshots ·
-`docreport/Rentora-Test-Report.docx`.
+`docreport/Rentora-Bug-Report.docx` · `docreport/Rentora-Recommendations.docx` ·
+`docreport/Rentora-Test-Report.docx` · `docreport/Rentora-Role-Based-Report.docx`.
 
 ## After failures
 Invoke `/self-heal`; re-run only the previously failing tests to confirm fixes.

@@ -9,6 +9,12 @@ allowed-tools: Read Edit Write Glob Grep
 
 Page objects contain ONLY locators. No assertions, no business logic.
 
+## ⚠️ Mandatory: Verify DOM Before Writing Locators
+
+**Before creating or updating page locators, you MUST use the Playwright MCP server**
+(`browser_navigate` + `browser_snapshot`) to inspect the actual rendered DOM.
+Never guess selectors — verify role names, labels, and element structure from the live page.
+
 ## Template (class style, matches the Rentora framework)
 
 ```javascript

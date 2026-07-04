@@ -34,12 +34,19 @@ module.exports = defineConfig({
     headless: !!process.env.CI,
     screenshot: "only-on-failure",
     video: "off",
+    // viewport:null lets the page size follow the real OS window instead of an
+    // emulated box, so --start-maximized actually fills the desktop. --window-size
+    // is the headless/CI fallback (no window manager to maximise).
+    viewport: null,
+    launchOptions: { args: ["--start-maximized", "--window-size=1920,1200"] },
   },
 
   projects: [
     {
       name: "chromium",
-      use: { viewport: { width: 1920, height: 1200 } },
+      // Desktop full-size, maximised window. The responsive specs override this
+      // per-test with page.setViewportSize() for the tablet/mobile sweep.
+      use: {},
     },
   ],
 });

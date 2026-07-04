@@ -11,6 +11,11 @@ When tests fail, diagnose and fix. **First distinguish a test defect (fix it)
 from a real app defect (keep it failing as evidence).** The Rentora baseline has
 3 known app defects (BUG-001/002/003) — do NOT "heal" those away.
 
+## ⚠️ Mandatory Rule Compliance
+This skill inherently follows the **Website Analysis Before Code Generation** mandate —
+Step 2 (inspect live DOM with Playwright MCP) is the analysis, and Steps 3-4 (fix locators/flow)
+are the code generation. Never skip Step 2 even if the error message seems obvious.
+
 ## Step 1: Read error output
 - Parse the Playwright error and `evidence/results.json`.
 - Find the failing locator and the failure screenshot under

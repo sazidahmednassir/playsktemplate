@@ -122,6 +122,28 @@ const BUGS = [
     shot: "BUG-004-filter-no-validation.png",
     tcs: "EDGE-02, EDGE-03, BVA-07",
   },
+  {
+    id: "BUG-007",
+    title: "Photo upload fails platform-wide — /images/upload returns HTTP 501 (Cloudinary not configured)",
+    severity: "High",
+    priority: "P1",
+    module: "Listings / Media Upload",
+    pre: "Logged in as admin at http://localhost:8000/admin/listings/create; the Photos 'Use placeholder image instead' toggle switched OFF to reveal the dropzone.",
+    steps: [
+      "Open /admin/listings/create and scroll to 'Photos'",
+      "Turn the 'Use placeholder image instead' switch OFF",
+      "Choose a valid landscape image (PNG/JPG/WebP, < 10MB) in the dropzone",
+      "Observe the upload network request and the UI",
+    ],
+    expected:
+      "The image uploads, a thumbnail renders and the counter increments (e.g. '1 / 20 uploaded').",
+    actual:
+      "POST /admin/listings/create/images/upload returns HTTP 501 Not Implemented and the UI shows 'Image uploads require Cloudinary configuration.'; the counter stays 0 / 20. The 501 is a server-wide missing-config condition (no CLOUDINARY_* env), so every image-upload surface is affected — admin Create Listing (confirmed) and the owner Add-Listing wizard step 7 'Photos' (same backend). Compounded by the uploader being hidden behind a default-ON placeholder toggle, so admins first perceive 'there is no way to upload'.",
+    evidence:
+      "Network: [POST] /admin/listings/create/images/upload => 501 Not Implemented. UI banner: 'Image uploads require Cloudinary configuration.' Automated ADM-10 fails deterministically with 501; ADM-11 documents the default-ON toggle. Reproduced at maximised 1920×1200.",
+    shot: "BUG-007-photo-upload-501.png",
+    tcs: "ADM-10, ADM-11",
+  },
 ];
 
 const RECOMMENDATIONS = {
@@ -134,6 +156,7 @@ const RECOMMENDATIONS = {
     "Decouple email sending from the registration transaction — queue the verification email so a mail failure never blocks account creation (fixes BUG-001's blast radius).",
     "Allow renters limited browsing before email verification; gate only owner-contact actions behind verification.",
     "Add a 'save & resume' confirmation to the 10-step listing wizard (the caption promises it — verify it persists).",
+    "Configure Cloudinary (CLOUDINARY_CLOUD_NAME / API_KEY / API_SECRET) in every environment so /images/upload returns 200 instead of 501 (fixes BUG-007); add a local-disk fallback for dev. Default the Photos section to showing the uploader rather than hiding it behind a default-ON placeholder toggle.",
   ],
   "Validation Improvements": [
     "Enforce and unit-test BD phone format (+8801XXXXXXXXX / 01XXXXXXXXX) on both client and server.",
@@ -170,6 +193,7 @@ const RISKS = {
     "Sensitive information disclosure via debug stack traces (BUG-002) if this build reaches a public environment.",
   ],
   Medium: [
+    "Photo upload is broken on every listing surface (BUG-007, HTTP 501 — Cloudinary not configured), so admins/owners cannot attach real images; listings fall back to placeholder cards.",
     "Budget-based search is unusable (BUG-003), undermining the core discovery experience.",
     "End-to-end owner→admin→publish flow and admin approve/reject were validated structurally but not executed E2E (manual TCs OWN-05, ADM-03/04).",
     "Email-dependent flows (verification, password reset, resend) are untested because the mailer is broken.",
@@ -252,7 +276,7 @@ children.push(new Paragraph({
   alignment: AlignmentType.CENTER, spacing: { after: 40 },
 }));
 children.push(new Paragraph({
-  children: [new TextRun({ text: "Prepared by QA Automation (Playwright + Playwright-MCP) · 26 Jun 2026", size: 20, color: "888888" })],
+  children: [new TextRun({ text: "Prepared by QA Automation (Playwright + Playwright-MCP) · 27 Jun 2026", size: 20, color: "888888" })],
   alignment: AlignmentType.CENTER, spacing: { after: 240 },
 }));
 
@@ -267,7 +291,7 @@ children.push(P(
   `& /login validation (${epbvaAuto.length} automated EP/BVA/edge cases, ${epbvaPass} passing), with every expected ` +
   "value pinned to live seed data — confirming the platform handles input boundaries and partitions robustly. " +
   "Testing uncovered " +
-  `${BUGS.length} distinct defects, two of which (registration crash and debug-mode disclosure) are release-blocking.`));
+  `${BUGS.length} distinct defects, three of which (registration crash, debug-mode disclosure and the platform-wide photo-upload failure) are release-blocking.`));
 children.push(table([
   headerRow(["Metric", "Count"]),
   new TableRow({ children: [cell("Total test cases designed"), cell(String(total))] }),

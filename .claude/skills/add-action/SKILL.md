@@ -10,6 +10,12 @@ allowed-tools: Read Edit Write Glob Grep
 Actions hold business logic / steps. They compose page-object locators.
 Keep **assertions out of actions** — assertions belong in specs.
 
+## ⚠️ Mandatory: Verify Flow Before Writing Actions
+
+**Before writing or updating action methods, use the Playwright MCP server** to walk through the
+actual user flow on the live site. Verify navigation paths, button clicks, form interactions,
+and state transitions from the live DOM — never assume the flow.
+
 ## Template (matches the Rentora framework)
 
 ```javascript

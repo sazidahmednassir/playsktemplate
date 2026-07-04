@@ -4,6 +4,20 @@
 
 My name is Nassir. QA Automation Engineer building E2E test frameworks with Playwright using the Page Object Model (POM) pattern.
 
+## ⚠️ MANDATORY RULE: Website Analysis Before Code Generation
+
+**Before generating ANY test cases or automation code, you MUST follow this workflow:**
+
+1. **Analyze the website** using the Playwright MCP Server (`browser_navigate` + `browser_snapshot`).
+2. **Explore every page** and understand the complete user journey end-to-end.
+3. **Verify actual UI elements**, locators, and business workflows from the live DOM.
+4. **Understand the application's business logic** — roles, permissions, state machines, validation rules — before writing test cases or automation scripts.
+5. **Generate test cases and automation code ONLY after completing website analysis.**
+6. **Validate** that the generated test cases cover the actual functionality and end-to-end user workflows observed during analysis.
+
+> This rule overrides all other rules. Do NOT skip analysis even if you think you know the app.
+> Use the Playwright MCP server (`npx @playwright/mcp`) configured in `.mcp.json` for all live DOM inspection.
+
 ## Communication Style
 
 - Be direct. No fluff. No filler. Get to the point.

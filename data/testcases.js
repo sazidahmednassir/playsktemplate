@@ -563,6 +563,46 @@ const MODULES = {
       technique: "ui",
       automated: true,
     },
+    {
+      id: "ADM-10",
+      title: "Admin Create Listing — photo upload returns HTTP 501 (Cloudinary not configured)",
+      precondition: "Logged in as admin on /admin/listings/create; placeholder toggle turned OFF",
+      description: "Upload a valid JPG/PNG/WebP (<10MB) via the Photos dropzone and observe the server response",
+      steps:
+        "1. Open /admin/listings/create\n2. Toggle 'Use placeholder image instead' OFF to reveal the dropzone\n3. Choose a valid landscape image (PNG, <10MB)\n4. Observe the upload network call and UI",
+      expected: "Image is uploaded, a thumbnail appears and the counter increments (e.g. 1 / 20 uploaded)",
+      actual:
+        "POST /admin/listings/create/images/upload returns HTTP 501 Not Implemented; UI shows 'Image uploads require Cloudinary configuration.'; counter stays 0 / 20. Server-wide missing CLOUDINARY_* env — blocks photos on every upload surface (admin create + owner wizard step 7).",
+      priority: "Critical",
+      technique: "error-handling",
+      automated: true,
+    },
+    {
+      id: "ADM-11",
+      title: "Admin Create Listing — photo dropzone is hidden behind a default-ON placeholder toggle",
+      precondition: "Logged in as admin on /admin/listings/create (fresh page)",
+      description: "The Photos section defaults to 'Use placeholder image instead' = ON, so no upload control is shown until it is switched off",
+      steps:
+        "1. Open /admin/listings/create\n2. Scroll to the Photos section\n3. Note the upload control is absent and the placeholder switch is ON\n4. Toggle the switch OFF",
+      expected: "Either the uploader is visible by default, or the placeholder default is a deliberate, discoverable choice",
+      actual:
+        "On load the 'Use placeholder image instead' switch is checked, hiding the file input entirely; the 'Drop photos here or browse' dropzone only appears after the switch is turned OFF. Admins perceive this as 'cannot upload images'.",
+      priority: "Medium",
+      technique: "ui",
+      automated: true,
+    },
+    {
+      id: "ADM-12",
+      title: "Admin Create Listing — required-field & description-length validation",
+      precondition: "Logged in as admin on /admin/listings/create",
+      description: "Submitting with empty required fields / a <100-char description is rejected client-side",
+      steps:
+        "1. Open /admin/listings/create\n2. Leave required fields blank and Description under 100 chars\n3. Click 'Create Listing'",
+      expected: "Submission is blocked with field-level validation; no listing is created",
+      priority: "Medium",
+      technique: "validation",
+      automated: false,
+    },
   ],
 
   // ===========================================================================

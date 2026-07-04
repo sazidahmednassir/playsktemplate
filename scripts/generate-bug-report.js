@@ -115,6 +115,34 @@ const BUGS = [
     shot: "UI-admin-users.png", w: 560, h: 360,
   },
   {
+    id: "BUG-007",
+    title: "Photo upload fails platform-wide — endpoint returns HTTP 501 (Cloudinary not configured)",
+    severity: "High", priority: "P1", module: "Listings / Media Upload", role: "Admin & Owner (both confirmed live)",
+    pre: "Logged in as admin at http://localhost:8000/admin/listings/create; the Photos section ‘Use placeholder image instead’ toggle switched OFF to reveal the dropzone.",
+    steps: [
+      "Open /admin/listings/create and scroll to ‘Photos’",
+      "Turn the ‘Use placeholder image instead’ switch OFF",
+      "Click ‘Drop photos here or browse’ and choose a valid landscape image (PNG/JPG/WebP, < 10MB)",
+      "Observe the upload network request and the UI",
+    ],
+    expected: "The image uploads, a thumbnail renders and the counter increments (e.g. ‘1 / 20 uploaded’).",
+    actual:
+      "Both upload surfaces were confirmed live. Admin: POST /admin/listings/create/images/upload => HTTP 501 Not " +
+      "Implemented, banner “Image uploads require Cloudinary configuration.”, counter stuck at 0 / 20. Owner: the full " +
+      "10-step wizard was completed to step 7 ‘Photos’ and POST /owner/listings/create/images/upload => HTTP 501, banner " +
+      "“Image uploads require Cloudinary configuration — coming soon.” The 501 is a server-wide missing-config condition " +
+      "(no CLOUDINARY_* environment), so every image-upload surface is affected. Impact differs by role: the admin form’s " +
+      "uploader is hidden behind a default-ON placeholder toggle (perceived as ‘no way to upload’), while the owner wizard " +
+      "shows the uploader by default but enforces a ‘minimum 3 photos’ gate — so the 501 hard-blocks owners from " +
+      "completing a real-photo listing unless they fall back to the placeholder. Automated as ADM-10 (fails " +
+      "deterministically with 501) and ADM-11 (default-ON toggle).",
+    evidence: "Admin: [POST] /admin/listings/create/images/upload => 501. Owner: [POST] /owner/listings/create/images/upload => 501 (reached via full wizard, step 7). Banners: ‘…require Cloudinary configuration.’ / ‘…— coming soon.’ Reproduced at maximised 1920×1200.",
+    shot: "BUG-007-photo-upload-501.png", w: 540, h: 150,
+    cap: "Admin Create Listing — Photos section: 501 after revealing the dropzone (placeholder toggle off).",
+    shot2: "BUG-007-owner-photo-501.png", w2: 540, h2: 165,
+    cap2: "Owner Add-Listing wizard step 7 — same 501 (“…— coming soon.”), with the ‘minimum 3 required’ gate that blocks completion.",
+  },
+  {
     id: "BUG-006",
     title: "Header “Browse” link is inconsistent across breakpoints",
     severity: "Trivial", priority: "P4", module: "Public Header / IA", role: "Guest",
@@ -171,7 +199,7 @@ children.push(new Paragraph({
   alignment: AlignmentType.CENTER, spacing: { after: 40 },
 }));
 children.push(new Paragraph({
-  children: [new TextRun({ text: "Playwright-MCP live analysis · Desktop 1920×1200 + Responsive (768 / 375) · 26 Jun 2026", size: 18, color: "888888" })],
+  children: [new TextRun({ text: "Playwright-MCP live analysis · Desktop 1920×1200 maximised + Responsive (768 / 375) · 27 Jun 2026", size: 18, color: "888888" })],
   alignment: AlignmentType.CENTER, spacing: { after: 220 },
 }));
 
@@ -179,30 +207,32 @@ children.push(new Paragraph({
 children.push(H("Summary", HeadingLevel.HEADING_1));
 const sevCount = (re) => BUGS.filter((b) => re.test(b.severity)).length;
 children.push(P(
-  `${BUGS.length} defects were captured across all roles. Two are release-blockers (registration crash and debug-mode ` +
-  `disclosure). The single broken /search price-slider component is responsible for both the missing budget filter and ` +
-  `all 20 console errors on that page.`));
+  `${BUGS.length} defects were captured across all roles. Three are release-blockers (registration crash, debug-mode ` +
+  `disclosure and platform-wide photo-upload failure). The single broken /search price-slider component is responsible ` +
+  `for both the missing budget filter and all 20 console errors on that page. Photo upload is broken everywhere a user ` +
+  `adds a listing because the server has no Cloudinary configuration (HTTP 501).`));
 children.push(table([
   headerRow(["Severity", "Count", "IDs"]),
   new TableRow({ children: [cell("Critical", { color: "B71C1C", bold: true }), cell(String(sevCount(/critical/i)), { align: AlignmentType.CENTER }), cell("BUG-001")] }),
-  new TableRow({ children: [cell("High", { color: FAILC, bold: true }), cell(String(sevCount(/high/i)), { align: AlignmentType.CENTER }), cell("BUG-002, BUG-003")] }),
+  new TableRow({ children: [cell("High", { color: FAILC, bold: true }), cell(String(sevCount(/high/i)), { align: AlignmentType.CENTER }), cell("BUG-002, BUG-003, BUG-007")] }),
   new TableRow({ children: [cell("Low", { color: MUTED }), cell(String(sevCount(/low/i)), { align: AlignmentType.CENTER }), cell("BUG-004, BUG-005")] }),
   new TableRow({ children: [cell("Trivial", { color: MUTED }), cell(String(sevCount(/trivial/i)), { align: AlignmentType.CENTER }), cell("BUG-006")] }),
 ]));
 // test execution (this headed rerun)
 children.push(H("Test execution — headed rerun (1920×1200)", HeadingLevel.HEADING_2));
 children.push(P(
-  "The full automated suite was re-run in the live headed browser at 1920×1200 to match the current configuration. " +
-  "160 of 163 tests passed (98%) in 8.8 minutes. The 3 failures are itemised below; two are app defects (BUG-003) and one " +
-  "is a test-data artefact, not an application bug.", {}));
+  "The full automated suite was re-run in the live headed browser at a maximised 1920×1200 window to match the current " +
+  "configuration. 161 of 165 tests passed (98%) in 3.9 minutes. Of the 4 failures, three are app defects (BUG-003 ×2 and " +
+  "the newly-added BUG-007) and one is a test-data artefact, not an application bug.", {}));
 children.push(table([
   headerRow(["Result", "Count"]),
-  new TableRow({ children: [cell("Passed", { color: "2E7D32", bold: true }), cell("160", { color: "2E7D32", bold: true, align: AlignmentType.CENTER })] }),
-  new TableRow({ children: [cell("Failed", { color: FAILC, bold: true }), cell("3", { color: FAILC, bold: true, align: AlignmentType.CENTER })] }),
-  new TableRow({ children: [cell("Total", { bold: true }), cell("163", { bold: true, align: AlignmentType.CENTER })] }),
+  new TableRow({ children: [cell("Passed", { color: "2E7D32", bold: true }), cell("161", { color: "2E7D32", bold: true, align: AlignmentType.CENTER })] }),
+  new TableRow({ children: [cell("Failed", { color: FAILC, bold: true }), cell("4", { color: FAILC, bold: true, align: AlignmentType.CENTER })] }),
+  new TableRow({ children: [cell("Total", { bold: true }), cell("165", { bold: true, align: AlignmentType.CENTER })] }),
 ]));
 children.push(table([
   headerRow(["Failed test", "Classification", "Maps to"]),
+  new TableRow({ children: [cell("ADM-10 admin photo upload succeeds (no Cloudinary 501)"), cell("App defect", { color: FAILC }), cell("BUG-007")] }),
   new TableRow({ children: [cell("SRCH-01 price-range slider renders and is operable"), cell("App defect", { color: FAILC }), cell("BUG-003")] }),
   new TableRow({ children: [cell("SRCH-02 no JavaScript console errors on /search"), cell("App defect", { color: FAILC }), cell("BUG-003")] }),
   new TableRow({ children: [cell("AUTH-12 unverified renter gated at /verify-email"), cell("Test-data / config (not an app bug)", { color: WARN }), cell("Env note below")] }),

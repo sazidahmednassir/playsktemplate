@@ -10,6 +10,17 @@ allowed-tools: Read Edit Write Glob Grep
 Create/extend a Playwright spec following the Rentora POM architecture.
 **Assertions live in specs only.**
 
+## ⚠️ Step 0 — Website Analysis (MANDATORY)
+
+**Before writing ANY test code, you MUST:**
+
+1. Use the Playwright MCP server (`browser_navigate` + `browser_snapshot`) to explore the live page(s) the test targets.
+2. Verify actual UI elements, locators, and business workflows from the live DOM.
+3. Understand the page flow, validation rules, and state transitions.
+4. Only after analysis — write the page locators, actions, and spec.
+
+> Violating this rule produces fragile tests based on assumptions. The Playwright MCP server is in `.mcp.json`.
+
 ## Template
 
 ```javascript

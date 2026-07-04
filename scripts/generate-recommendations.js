@@ -96,7 +96,7 @@ children.push(new Paragraph({
   alignment: AlignmentType.CENTER, spacing: { after: 40 },
 }));
 children.push(new Paragraph({
-  children: [new TextRun({ text: "Playwright-MCP live analysis · Desktop 1920×1080 + Responsive (768 / 375) · 26 Jun 2026", size: 18, color: "888888" })],
+  children: [new TextRun({ text: "Playwright-MCP live analysis · Desktop 1920×1200 maximised + Responsive (768 / 375) · 27 Jun 2026", size: 18, color: "888888" })],
   alignment: AlignmentType.CENTER, spacing: { after: 240 },
 }));
 
@@ -104,10 +104,10 @@ children.push(new Paragraph({
 children.push(H("1. Scope & Test Environment", HeadingLevel.HEADING_1));
 children.push(P(
   "The live application was driven end-to-end with the Playwright MCP browser across every role. " +
-  "The desktop pass ran at full-screen 1920×1080; a responsiveness sweep was then run at tablet (768×1024) " +
-  "and mobile (375×812). This report contains four targeted recommendations requested for this cycle " +
-  "(remove Browse from the header, fix the search sidebar filter, clear the console report, update the admin UI), " +
-  "plus the responsiveness findings."));
+  "The desktop pass ran full-screen at a maximised 1920×1200 window; a responsiveness sweep was then run at tablet " +
+  "(768×1024) and mobile (375×812). This report contains the targeted recommendations for this cycle " +
+  "(remove Browse from the header, fix the search sidebar filter, clear the console report, update the admin UI, " +
+  "and configure Cloudinary so photo upload works), plus the responsiveness findings."));
 children.push(table([
   headerRow(["Item", "Detail"]),
   new TableRow({ children: [cell("Renter / Owner host", { bold: true }), cell("http://127.0.0.1:8000")] }),
@@ -125,6 +125,7 @@ children.push(table([
   new TableRow({ children: [cell("R3"), cell("Clear the 20 console errors on /search"), cell("Front-end health"), cell("High", { color: FAILC, bold: true })] }),
   new TableRow({ children: [cell("R4"), cell("Update / polish the Admin UI"), cell("Admin portal"), cell("Medium", { color: WARN })] }),
   new TableRow({ children: [cell("R5"), cell("Responsiveness refinements (tablet / mobile)"), cell("Cross-cutting"), cell("Medium", { color: WARN })] }),
+  new TableRow({ children: [cell("R6"), cell("Configure Cloudinary & surface the photo uploader by default"), cell("Listings / Media"), cell("High", { color: FAILC, bold: true })] }),
 ]));
 
 // --- 2. R1 — Remove Browse -------------------------------------------------
@@ -228,6 +229,32 @@ children.push(table([
 ]));
 children.push(img("REC-04c-admin-review-queue.png", 560, 250));
 children.push(caption("REC-04c — Review Queue with status tabs (Pending / Approved 8 / Rejected / Draft / Archived / All). Functional; benefits from the empty-state CTA above."));
+
+// --- 5b. R6 — Cloudinary / photo upload ------------------------------------
+children.push(H("5b. R6 — Configure Cloudinary & surface the photo uploader", HeadingLevel.HEADING_1));
+children.push(metaTable([["Area", "Listings / Media upload"], ["Priority", "High"], ["Severity", "Functional blocker"], ["Linked bug", "BUG-007"]]));
+children.push(P("Finding", { bold: true, size: 24 }));
+children.push(P(
+  "Adding photos to a listing fails for every role — confirmed live on both the admin Create Listing form and the owner " +
+  "Add-Listing wizard step 7 (completed end-to-end). POST …/listings/create/images/upload returns HTTP 501 Not " +
+  "Implemented with the banner “Image uploads require Cloudinary configuration” (the owner copy adds “— coming soon.”), " +
+  "and the counter stays at 0 / 20. The impact differs by role: the admin uploader is hidden behind a default-ON " +
+  "“Use placeholder image instead” switch (initial impression: “there is no way to upload images”), whereas the owner " +
+  "wizard shows the uploader by default but enforces a “minimum 3 photos” gate — so the 501 hard-blocks owners from " +
+  "completing a real-photo listing unless they fall back to the placeholder."));
+children.push(img("BUG-007-photo-upload-501.png", 540, 150));
+children.push(caption("REC-06 — Photos section: the Cloudinary 501 error after turning the placeholder toggle off and choosing a valid image."));
+children.push(P("Root cause", { bold: true }));
+children.push(P(
+  "The upload endpoint is gated on Cloudinary credentials that are absent in this environment, so it short-circuits with " +
+  "501 rather than storing the file. Because it is server configuration (not page code), the failure is platform-wide — " +
+  "every image-upload entry point is affected identically."));
+children.push(P("Recommendation", { bold: true }));
+children.push(bullet("Set CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET (or the app’s configured driver) in every environment and restart, so /images/upload returns 200 and stores the asset."));
+children.push(bullet("If a non-Cloudinary driver is intended for local/dev, wire a local disk fallback so uploads degrade gracefully instead of returning 501."));
+children.push(bullet("Default the Photos section to showing the uploader (placeholder OFF), or make the toggle a clearly-labelled secondary choice — don’t hide the primary action behind a default-on switch."));
+children.push(bullet("When upload is genuinely unavailable, disable the dropzone and show an inline explanation instead of letting the user pick a file and then fail."));
+children.push(bullet("Keep ADM-10 (upload must not 501) as a CI regression gate and ADM-11 (toggle default) as a UI guard."));
 
 // --- 6. Role-wise core-feature verification --------------------------------
 children.push(H("6. Role-wise core-feature verification", HeadingLevel.HEADING_1));
